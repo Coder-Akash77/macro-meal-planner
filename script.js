@@ -83,6 +83,29 @@ function generateCombinations(foods) {
   return combinations;
 }
 
+function calculateCombinationTotal(combination) {
+  let totalCalories = 0;
+  let totalProtein = 0;
+  let totalCarbs = 0;
+  let totalFat = 0;
+
+  combination.forEach(function (item) {
+    const nutrition = calculateNutrition(item.food, item.quantity);
+    totalCalories += nutrition.calories;
+    totalProtein += nutrition.protein;
+    totalCarbs += nutrition.carbs;
+    totalFat += nutrition.fat;
+  });
+
+  return {
+    items: combination,
+    totalCalories: totalCalories,
+    totalProtein: totalProtein,
+    totalCarbs: totalCarbs,
+    totalFat: totalFat
+  };
+}
+
 // Load food data from JSON file
 async function loadFoodData() {
     try {
