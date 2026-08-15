@@ -1,57 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Macro-Nutrient Reverse Calculator</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macro-Nutrient Reverse Calculator</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-  <header>
-    <h1>Macro-Nutrient Reverse Calculator</h1>
-    <p>Enter your daily targets to get meal suggestions</p>
-  </header>
+    <header>
+        <h1>Macro-Nutrient Reverse Calculator</h1>
+        <p>Enter your daily targets to get meal suggestions</p>
+    </header>
 
-  <main>
-    <!-- Macro Target Form -->
-    <section id="macro-form-section">
-      <h2>Set Your Targets</h2>
-      <form id="macro-form">
-        <div class="form-group">
-          <label for="calories">Calories (kcal)</label>
-          <input type="number" id="calories" name="calories" min="0">
-        </div>
+    <main>
+        <!-- Macro Target Form -->
+        <section id="macro-form-section">
+            <h2>Set Your Targets</h2>
+            <form id="macro-form">
+                <div class="form-group">
+                    <label for="calories">Calories (kcal)</label>
+                    <input type="number" id="calories" name="calories" min="0">
+                </div>
 
-        <div class="form-group">
-          <label for="protein">Protein (g)</label>
-          <input type="number" id="protein" name="protein" min="0">
-        </div>
+                <div class="form-group">
+                    <label for="protein">Protein (g)</label>
+                    <input type="number" id="protein" name="protein" min="0">
+                </div>
 
-        <div class="form-group">
-          <label for="carbs">Carbs (g)</label>
-          <input type="number" id="carbs" name="carbs" min="0">
-        </div>
+                <div class="form-group">
+                    <label for="carbs">Carbs (g)</label>
+                    <input type="number" id="carbs" name="carbs" min="0">
+                </div>
 
-        <div class="form-group">
-          <label for="fat">Fat (g)</label>
-          <input type="number" id="fat" name="fat" min="0">
-        </div>
+                <div class="form-group">
+                    <label for="fat">Fat (g)</label>
+                    <input type="number" id="fat" name="fat" min="0">
+                </div>
 
-        <button type="submit">Find Meals</button>
-      </form>
-      <p id="form-error" class="error-message"></p>
-    </section>
+                <div class="form-group">
+                    <label>Dietary Preference</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="dietPreference" value="veg" checked> Vegetarian</label>
+                        <label><input type="radio" name="dietPreference" value="non-veg"> Non-Vegetarian</label>
+                        <!-- <label><input type="radio" name="dietPreference" value="both"> Both</label> -->
+                    </div>
+                </div>
 
-    <!-- Results Section (placeholder for now) -->
-    <section id="results-section">
-      <h2>Meal Suggestions</h2>
-      <div id="results-container">
-        <p>No results yet. Enter your targets above.</p>
-      </div>
-    </section>
-  </main>
+                <button type="submit">Find Meals</button>
+            </form>
+            <p id="form-error" class="error-message"></p>
+        </section>
 
-  <script src="script.js"></script>
+        <!-- Food List Section -->
+        <section id="food-list-section">
+            <h2>Food Database</h2>
+            <div id="food-list-container"></div>
+        </section>
+
+        <!-- Results Section (placeholder for now) -->
+        <section id="results-section">
+            <h2>Meal Suggestions</h2>
+            <div id="results-container">
+                <p>No results yet. Enter your targets above.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
 </body>
+
 </html>
