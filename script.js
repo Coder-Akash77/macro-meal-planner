@@ -4,6 +4,7 @@ const formError = document.getElementById("form-error");
 const resultsContainer = document.getElementById("results-container");
 const foodListContainer = document.getElementById("food-list-container");
 const consistencyWarning = document.getElementById("consistency-warning");
+const foodSearchInput = document.getElementById("food-search");
 
 // Test that JS is connected
 console.log("script.js connected successfully");
@@ -81,6 +82,16 @@ async function loadFoodData() {
 }
 
 loadFoodData();
+
+foodSearchInput.addEventListener("input", function () {
+  const searchTerm = foodSearchInput.value.toLowerCase();
+
+  const filteredResults = foodData.filter(function (food) {
+    return food.name.toLowerCase().includes(searchTerm);
+  });
+
+  displayFoods(filteredResults);
+});
 
 // Handle form submission
 macroForm.addEventListener("submit", function (event) {
