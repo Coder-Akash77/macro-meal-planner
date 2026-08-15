@@ -106,6 +106,51 @@ function calculateCombinationTotal(combination) {
   };
 }
 
+const CALORIE_TOLERANCE_PERCENT = 10; // ±10%
+
+function isWithinTolerance(combinationTotal, targetCalories) {
+  const lowerBound = targetCalories * (1 - CALORIE_TOLERANCE_PERCENT / 100);
+  const upperBound = targetCalories * (1 + CALORIE_TOLERANCE_PERCENT / 100);
+
+  return combinationTotal.totalCalories >= lowerBound && combinationTotal.totalCalories <= upperBound;
+}
+
+function calculateMatchScore(combinationTotal, target) {
+  const calorieDiff = Math.abs(combinationTotal.totalCalories - target.calories) / target.calories;
+  const proteinDiff = Math.abs(combinationTotal.totalProtein - target.protein) / target.protein;
+  const carbsDiff = Math.abs(combinationTotal.totalCarbs - target.carbs) / target.carbs;
+  const fatDiff = Math.abs(combinationTotal.totalFat - target.fat) / target.fat;
+
+  const averageDiff = (calorieDiff + proteinDiff + carbsDiff + fatDiff) / 4;
+
+  const matchScore = Math.max(0, (1 - averageDiff) * 100);
+
+  return matchScore;
+}
+
+function findBestMeals(foods, target) {
+  const allCombinations = generateCombinations(foods);
+  const validMeals = [];
+
+  allCombinations.forEach(function (combination) {
+    const total = calculateCombinationTotal(combination);
+
+    if (isWithinTolerance(total, target.calories)) {
+      const score = calculateMatchScore(total, target);
+      validMeals.push({
+        combination: total,
+        score: score
+      });
+    }
+  });
+
+  validMeals.sort(function (a, b) {
+    return b.score - a.score; // highest score first
+  });
+
+  return validMeals;
+}
+
 // Load food data from JSON file
 async function loadFoodData() {
     try {
