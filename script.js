@@ -36,6 +36,19 @@ function filterByDiet(foods, preference) {
   return foods; // "non-veg" or "both" -> no exclusion
 }
 
+function calculateNutrition(food, quantityInGrams) {
+  const multiplier = quantityInGrams / 100;
+
+  return {
+    name: food.name,
+    quantityInGrams: quantityInGrams,
+    calories: food.caloriesPer100g * multiplier,
+    protein: food.proteinPer100g * multiplier,
+    carbs: food.carbsPer100g * multiplier,
+    fat: food.fatPer100g * multiplier
+  };
+}
+
 // Load food data from JSON file
 async function loadFoodData() {
   try {
@@ -91,3 +104,5 @@ macroForm.addEventListener("submit", function (event) {
   console.log("Diet preference:", dietPreference);
   console.log("Filtered food count:", filteredFoods.length);
 });
+
+const chicken = foodData.find(f => f.name === "Chicken Breast, cooked");
