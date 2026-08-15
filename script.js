@@ -62,6 +62,27 @@ function checkMacroConsistency(calories, protein, carbs, fat) {
     };
 }
 
+const SERVING_SIZES = [50, 100, 150, 200]; // grams to try per food
+
+function generateCombinations(foods) {
+  const combinations = [];
+
+  for (let i = 0; i < foods.length; i++) {
+    for (let j = i + 1; j < foods.length; j++) {
+      SERVING_SIZES.forEach(function (qty1) {
+        SERVING_SIZES.forEach(function (qty2) {
+          combinations.push([
+            { food: foods[i], quantity: qty1 },
+            { food: foods[j], quantity: qty2 }
+          ]);
+        });
+      });
+    }
+  }
+
+  return combinations;
+}
+
 // Load food data from JSON file
 async function loadFoodData() {
     try {
