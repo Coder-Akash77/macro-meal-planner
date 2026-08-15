@@ -87,3 +87,11 @@ button:hover {
   gap: 5px;
   font-weight: normal;
 }
+.warning-message {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+}
