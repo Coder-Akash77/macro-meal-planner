@@ -29,17 +29,6 @@
                     <label for="protein">Protein (g)</label>
                     <input type="number" id="protein" name="protein" min="0">
                 </div>
-
-                <div class="form-group">
-                    <label for="carbs">Carbs (g)</label>
-                    <input type="number" id="carbs" name="carbs" min="0">
-                </div>
-
-                <div class="form-group">
-                    <label for="fat">Fat (g)</label>
-                    <input type="number" id="fat" name="fat" min="0">
-                </div>
-
                 <div class="form-group">
                     <label>Dietary Preference</label>
                     <div class="radio-group">
@@ -52,7 +41,7 @@
                 <button type="submit">Find Meals</button>
             </form>
             <p id="form-error" class="error-message"></p>
-<div id="consistency-warning" class="warning-message" style="display: none;"></div>
+            <div id="consistency-warning" class="warning-message" style="display: none;"></div>
         </section>
 
         <!-- Food List Section -->
@@ -64,11 +53,11 @@
 
         <!-- Results Section (placeholder for now) -->
         <section id="results-section">
-    <h2>Meal Suggestions</h2>
-    <div id="results-container">
-        <p id="results-placeholder">No results yet. Enter your targets above.</p>
-    </div>
-</section>
+            <h2>Meal Suggestions</h2>
+            <div id="results-container">
+                <p id="results-placeholder">No results yet. Enter your targets above.</p>
+            </div>
+        </section>
     </main>
 
     <script src="script.js"></script>

@@ -62,6 +62,23 @@ function checkMacroConsistency(calories, protein, carbs, fat) {
     };
 }
 
+function deriveCarbsAndFat(calories, protein) {
+  const proteinCalories = protein * 4;
+  const remainingCalories = calories - proteinCalories;
+
+  const carbsCalories = remainingCalories * 0.5;
+  const fatCalories = remainingCalories * 0.5;
+
+  const carbsGrams = carbsCalories / 4;
+  const fatGrams = fatCalories / 9;
+
+  return {
+    carbs: carbsGrams,
+    fat: fatGrams,
+    isPossible: remainingCalories > 0
+  };
+}
+
 const SERVING_SIZES = [50, 100, 150, 200]; // grams to try per food
 
 function generateCombinations(foods) {
@@ -224,40 +241,65 @@ macroForm.addEventListener("submit", function (event) {
 
     const calories = Number(document.getElementById("calories").value);
     const protein = Number(document.getElementById("protein").value);
-    const carbs = Number(document.getElementById("carbs").value);
-    const fat = Number(document.getElementById("fat").value);
+    // const carbs = Number(document.getElementById("carbs").value);
+    // const fat = Number(document.getElementById("fat").value);
 
     // Reset previous error
     formError.textContent = "";
 
     // Validation checks
-    if (!calories || !protein || !carbs || !fat) {
-        formError.textContent = "Please fill in all fields.";
-        return;
-    }
 
-    if (calories <= 0 || protein <= 0 || carbs <= 0 || fat <= 0) {
-        formError.textContent = "Values must be greater than 0.";
-        return;
-    }
+    if (!calories || !protein) {
+    formError.textContent = "Please fill in all fields.";
+    return;
+  }
 
-    console.log("Valid targets:", { calories, protein, carbs, fat });
+  if (calories <= 0 || protein <= 0) {
+    formError.textContent = "Values must be greater than 0.";
+    return;
+  }
+    // if (!calories || !protein || !carbs || !fat) {
+    //     formError.textContent = "Please fill in all fields.";
+    //     return;
+    // }
+
+    // if (calories <= 0 || protein <= 0 || carbs <= 0 || fat <= 0) {
+    //     formError.textContent = "Values must be greater than 0.";
+    //     return;
+    // }
+
+    console.log("Valid targets:", { calories, protein });
+    // console.log("Valid targets:", { calories, protein, carbs, fat });
     // Check macro/calorie consistency
-    const consistencyResult = checkMacroConsistency(calories, protein, carbs, fat);
 
-    if (!consistencyResult.isConsistent) {
-        consistencyWarning.style.display = "block";
-        consistencyWarning.textContent =
-            `Your macros add up to ${consistencyResult.derivedCalories.toFixed(0)} kcal, but your target is ${calories} kcal (${consistencyResult.percentDiff.toFixed(1)}% difference). Please adjust your values.`;
-        return;
-    } else {
-        consistencyWarning.style.display = "none";
-    }
+    const derived = deriveCarbsAndFat(calories, protein);
+
+  if (!derived.isPossible) {
+    consistencyWarning.style.display = "block";
+    consistencyWarning.textContent =
+      `Your protein target alone (${(protein * 4).toFixed(0)} kcal) exceeds your calorie target (${calories} kcal). Please lower protein or raise calories.`;
+    return;
+  } else {
+    consistencyWarning.style.display = "none";
+  }
+
+
+    // const consistencyResult = checkMacroConsistency(calories, protein, carbs, fat);
+
+    // if (!consistencyResult.isConsistent) {
+    //     consistencyWarning.style.display = "block";
+    //     consistencyWarning.textContent =
+    //         `Your macros add up to ${consistencyResult.derivedCalories.toFixed(0)} kcal, but your target is ${calories} kcal (${consistencyResult.percentDiff.toFixed(1)}% difference). Please adjust your values.`;
+    //     return;
+    // } else {
+    //     consistencyWarning.style.display = "none";
+    // }
 
    const dietPreference = document.querySelector('input[name="dietPreference"]:checked').value;
   const filteredFoods = filterByDiet(foodData, dietPreference);
 
-  const target = { calories, protein, carbs, fat };
+  const target = { calories, protein, carbs: derived.carbs, fat: derived.fat };
+//   const target = { calories, protein, carbs, fat };
   const results = findBestMeals(filteredFoods, target);
 
   displayResults(results);
