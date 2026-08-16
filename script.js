@@ -169,6 +169,8 @@ function findBestMeals(foods, target) {
 }
 
 function displayResults(results) {
+    window.currentResults = results;
+    
   resultsContainer.innerHTML = ""; // clear previous content
 
   if (results.length === 0) {
@@ -198,10 +200,36 @@ function displayResults(results) {
         Carbs: ${result.combination.totalCarbs.toFixed(1)}g |
         Fat: ${result.combination.totalFat.toFixed(1)}g
       </div>
+      <div class="meal-card-actions">
+        <button class="save-favorite-btn">Save to Favorites</button>
+      </div>
     `;
 
     resultsContainer.appendChild(card);
   });
+}
+
+function saveFavorite(mealTotal) {
+  const favorites = getFavorites();
+
+  const favoriteMeal = {
+    id: Date.now(), // unique id based on timestamp
+    items: mealTotal.items.map(function (item) {
+      return { name: item.food.name, quantity: item.quantity };
+    }),
+    totalCalories: mealTotal.totalCalories,
+    totalProtein: mealTotal.totalProtein,
+    totalCarbs: mealTotal.totalCarbs,
+    totalFat: mealTotal.totalFat
+  };
+
+  favorites.push(favoriteMeal);
+  localStorage.setItem("favorites", JSON.stringify(favorites));
+}
+
+function getFavorites() {
+  const stored = localStorage.getItem("favorites");
+  return stored ? JSON.parse(stored) : [];
 }
 
 // Load food data from JSON file
@@ -233,6 +261,17 @@ foodSearchInput.addEventListener("input", function () {
   });
 
   displayFoods(filteredResults);
+});
+
+resultsContainer.addEventListener("click", function (event) {
+  if (event.target.classList.contains("save-favorite-btn")) {
+    const card = event.target.closest(".meal-card");
+    const cardIndex = Array.from(resultsContainer.children).indexOf(card);
+    const mealToSave = window.currentResults[cardIndex].combination;
+
+    saveFavorite(mealToSave);
+    alert("Meal saved to favorites!");
+  }
 });
 
 // Handle form submission
