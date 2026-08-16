@@ -151,6 +151,42 @@ function findBestMeals(foods, target) {
   return validMeals;
 }
 
+function displayResults(results) {
+  resultsContainer.innerHTML = ""; // clear previous content
+
+  if (results.length === 0) {
+    resultsContainer.innerHTML = "<p>No combination found within the selected tolerance.</p>";
+    return;
+  }
+
+  const topResults = results.slice(0, 5); // show top 5 matches only
+
+  topResults.forEach(function (result) {
+    const card = document.createElement("div");
+    card.classList.add("meal-card");
+
+    let foodListHTML = "";
+    result.combination.items.forEach(function (item) {
+      foodListHTML += `<li>${item.food.name} — ${item.quantity}g</li>`;
+    });
+
+    card.innerHTML = `
+      <div class="meal-card-header">
+        <span class="match-score">${result.score.toFixed(1)}% match</span>
+      </div>
+      <ul class="meal-food-list">${foodListHTML}</ul>
+      <div class="meal-totals">
+        Calories: ${result.combination.totalCalories.toFixed(0)} kcal |
+        Protein: ${result.combination.totalProtein.toFixed(1)}g |
+        Carbs: ${result.combination.totalCarbs.toFixed(1)}g |
+        Fat: ${result.combination.totalFat.toFixed(1)}g
+      </div>
+    `;
+
+    resultsContainer.appendChild(card);
+  });
+}
+
 // Load food data from JSON file
 async function loadFoodData() {
     try {
@@ -218,13 +254,13 @@ macroForm.addEventListener("submit", function (event) {
         consistencyWarning.style.display = "none";
     }
 
-    // Get selected dietary preference
-    const dietPreference = document.querySelector('input[name="dietPreference"]:checked').value;
+   const dietPreference = document.querySelector('input[name="dietPreference"]:checked').value;
+  const filteredFoods = filterByDiet(foodData, dietPreference);
 
-    // Filter foods according to diet preference
-    const filteredFoods = filterByDiet(foodData, dietPreference);
+  const target = { calories, protein, carbs, fat };
+  const results = findBestMeals(filteredFoods, target);
 
-    console.log("Diet preference:", dietPreference);
-    console.log("Filtered food count:", filteredFoods.length);
+  displayResults(results);
+  document.getElementById("results-section").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 

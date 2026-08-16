@@ -103,3 +103,68 @@ button:hover {
   border-radius: 4px;
   font-size: 1rem;
 }
+:root {
+  --primary: #2c3e50;
+  --primary-light: #34495e;
+  --accent: #27ae60;
+  --accent-light: #eafaf1;
+  --border-light: #e0e0e0;
+  --text-muted: #666;
+}
+
+#results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.meal-card {
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 16px 18px;
+  background-color: #fafafa;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.meal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.meal-card-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.match-score {
+  background-color: var(--accent-light);
+  color: var(--accent);
+  font-weight: bold;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.meal-food-list {
+  list-style: none;
+  margin-bottom: 12px;
+}
+
+.meal-food-list li {
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--border-light);
+  font-size: 0.95rem;
+}
+
+.meal-food-list li:last-child {
+  border-bottom: none;
+}
+
+.meal-totals {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background-color: white;
+  padding: 8px 10px;
+  border-radius: 4px;
+}
