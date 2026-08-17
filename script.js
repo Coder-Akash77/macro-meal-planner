@@ -11,9 +11,6 @@ const dailyTotals = document.getElementById("daily-totals");
 const MINIMUM_MATCH_SCORE = 70;
 
 
-// Test that JS is connected
-console.log("script.js connected successfully");
-
 let foodData = []; // will hold our loaded food list
 
 // Render the food list on the page
@@ -56,147 +53,139 @@ function calculateNutrition(food, quantityInGrams) {
     };
 }
 
-function checkMacroConsistency(calories, protein, carbs, fat) {
-    const derivedCalories = (protein * 4) + (carbs * 4) + (fat * 9);
-    const percentDiff = Math.abs(derivedCalories - calories) / calories * 100;
 
-    return {
-        derivedCalories: derivedCalories,
-        percentDiff: percentDiff,
-        isConsistent: percentDiff <= 10
-    };
-}
 
 function deriveCarbsAndFat(calories, protein) {
-  const proteinCalories = protein * 4;
-  const remainingCalories = calories - proteinCalories;
+    const proteinCalories = protein * 4;
+    const remainingCalories = calories - proteinCalories;
 
-  const carbsCalories = remainingCalories * 0.5;
-  const fatCalories = remainingCalories * 0.5;
+    const carbsCalories = remainingCalories * 0.5;
+    const fatCalories = remainingCalories * 0.5;
 
-  const carbsGrams = carbsCalories / 4;
-  const fatGrams = fatCalories / 9;
+    const carbsGrams = carbsCalories / 4;
+    const fatGrams = fatCalories / 9;
 
-  return {
-    carbs: carbsGrams,
-    fat: fatGrams,
-    isPossible: remainingCalories > 0
-  };
+    return {
+        carbs: carbsGrams,
+        fat: fatGrams,
+        isPossible: remainingCalories > 0
+    };
 }
 
 const SERVING_SIZES = [50, 100, 150, 200]; // grams to try per food
 
 function generateCombinations(foods) {
-  const combinations = [];
+    const combinations = [];
 
-  for (let i = 0; i < foods.length; i++) {
-    for (let j = i + 1; j < foods.length; j++) {
-      SERVING_SIZES.forEach(function (qty1) {
-        SERVING_SIZES.forEach(function (qty2) {
-          combinations.push([
-            { food: foods[i], quantity: qty1 },
-            { food: foods[j], quantity: qty2 }
-          ]);
-        });
-      });
+    for (let i = 0; i < foods.length; i++) {
+        for (let j = i + 1; j < foods.length; j++) {
+            SERVING_SIZES.forEach(function (qty1) {
+                SERVING_SIZES.forEach(function (qty2) {
+                    combinations.push([
+                        { food: foods[i], quantity: qty1 },
+                        { food: foods[j], quantity: qty2 }
+                    ]);
+                });
+            });
+        }
     }
-  }
 
-  return combinations;
+    return combinations;
 }
 
 function calculateCombinationTotal(combination) {
-  let totalCalories = 0;
-  let totalProtein = 0;
-  let totalCarbs = 0;
-  let totalFat = 0;
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
 
-  combination.forEach(function (item) {
-    const nutrition = calculateNutrition(item.food, item.quantity);
-    totalCalories += nutrition.calories;
-    totalProtein += nutrition.protein;
-    totalCarbs += nutrition.carbs;
-    totalFat += nutrition.fat;
-  });
+    combination.forEach(function (item) {
+        const nutrition = calculateNutrition(item.food, item.quantity);
+        totalCalories += nutrition.calories;
+        totalProtein += nutrition.protein;
+        totalCarbs += nutrition.carbs;
+        totalFat += nutrition.fat;
+    });
 
-  return {
-    items: combination,
-    totalCalories: totalCalories,
-    totalProtein: totalProtein,
-    totalCarbs: totalCarbs,
-    totalFat: totalFat
-  };
+    return {
+        items: combination,
+        totalCalories: totalCalories,
+        totalProtein: totalProtein,
+        totalCarbs: totalCarbs,
+        totalFat: totalFat
+    };
 }
 
 const CALORIE_TOLERANCE_PERCENT = 10; // ±10%
 
 function isWithinTolerance(combinationTotal, targetCalories) {
-  const lowerBound = targetCalories * (1 - CALORIE_TOLERANCE_PERCENT / 100);
-  const upperBound = targetCalories * (1 + CALORIE_TOLERANCE_PERCENT / 100);
+    const lowerBound = targetCalories * (1 - CALORIE_TOLERANCE_PERCENT / 100);
+    const upperBound = targetCalories * (1 + CALORIE_TOLERANCE_PERCENT / 100);
 
-  return combinationTotal.totalCalories >= lowerBound && combinationTotal.totalCalories <= upperBound;
+    return combinationTotal.totalCalories >= lowerBound && combinationTotal.totalCalories <= upperBound;
 }
 
 function calculateMatchScore(combinationTotal, target) {
-  const calorieDiff = Math.abs(combinationTotal.totalCalories - target.calories) / target.calories;
-  const proteinDiff = Math.abs(combinationTotal.totalProtein - target.protein) / target.protein;
-  const carbsDiff = Math.abs(combinationTotal.totalCarbs - target.carbs) / target.carbs;
-  const fatDiff = Math.abs(combinationTotal.totalFat - target.fat) / target.fat;
+    const calorieDiff = Math.abs(combinationTotal.totalCalories - target.calories) / target.calories;
+    const proteinDiff = Math.abs(combinationTotal.totalProtein - target.protein) / target.protein;
+    const carbsDiff = Math.abs(combinationTotal.totalCarbs - target.carbs) / target.carbs;
+    const fatDiff = Math.abs(combinationTotal.totalFat - target.fat) / target.fat;
 
-  const averageDiff = (calorieDiff + proteinDiff + carbsDiff + fatDiff) / 4;
+    const averageDiff = (calorieDiff + proteinDiff + carbsDiff + fatDiff) / 4;
 
-  const matchScore = Math.max(0, (1 - averageDiff) * 100);
+    const matchScore = Math.max(0, (1 - averageDiff) * 100);
 
-  return matchScore;
+    return matchScore;
 }
 
 function findBestMeals(foods, target) {
-  const allCombinations = generateCombinations(foods);
-  const validMeals = [];
+    const allCombinations = generateCombinations(foods);
+    const validMeals = [];
 
-  allCombinations.forEach(function (combination) {
-    const total = calculateCombinationTotal(combination);
+    allCombinations.forEach(function (combination) {
+        const total = calculateCombinationTotal(combination);
 
-    if (isWithinTolerance(total, target.calories)) {
-      const score = calculateMatchScore(total, target);
+        if (isWithinTolerance(total, target.calories)) {
+            const score = calculateMatchScore(total, target);
 
-      if (score >= MINIMUM_MATCH_SCORE) {
-        validMeals.push({
-          combination: total,
-          score: score
-        });
-      }
-    }
-  });
+            if (score >= MINIMUM_MATCH_SCORE) {
+                validMeals.push({
+                    combination: total,
+                    score: score
+                });
+            }
+        }
+    });
 
-  validMeals.sort(function (a, b) {
-    return b.score - a.score; // highest score first
-  });
+    validMeals.sort(function (a, b) {
+        return b.score - a.score; // highest score first
+    });
 
-  return validMeals;
+    return validMeals;
 }
 
 function displayResults(results) {
     window.currentResults = results;
 
-  resultsContainer.innerHTML = ""; // clear previous content
+    resultsContainer.innerHTML = ""; // clear previous content
 
-  if (results.length === 0) {
-resultsContainer.innerHTML = "<div class='no-results-message'>No combination found within the selected tolerance. Try adjusting your calorie or protein target.</div>";    return;
-  }
+    if (results.length === 0) {
+        resultsContainer.innerHTML = "<div class='no-results-message'>No combination found within the selected tolerance. Try adjusting your calorie or protein target.</div>"; 
+        return;
+    }
 
-  const topResults = results.slice(0, 5); // show top 5 matches only
+    const topResults = results.slice(0, 5); // show top 5 matches only
 
-  topResults.forEach(function (result) {
-    const card = document.createElement("div");
-    card.classList.add("meal-card");
+    topResults.forEach(function (result) {
+        const card = document.createElement("div");
+        card.classList.add("meal-card");
 
-    let foodListHTML = "";
-    result.combination.items.forEach(function (item) {
-      foodListHTML += `<li>${item.food.name} — ${item.quantity}g</li>`;
-    });
+        let foodListHTML = "";
+        result.combination.items.forEach(function (item) {
+            foodListHTML += `<li>${item.food.name} — ${item.quantity}g</li>`;
+        });
 
-    card.innerHTML = `
+        card.innerHTML = `
       <div class="meal-card-header">
         <span class="match-score">${result.score.toFixed(1)}% match</span>
       </div>
@@ -213,52 +202,52 @@ resultsContainer.innerHTML = "<div class='no-results-message'>No combination fou
       </div>
     `;
 
-    resultsContainer.appendChild(card);
-  });
+        resultsContainer.appendChild(card);
+    });
 }
 
 function saveFavorite(mealTotal) {
-  const favorites = getFavorites();
+    const favorites = getFavorites();
 
-  const favoriteMeal = {
-    id: Date.now(), // unique id based on timestamp
-    items: mealTotal.items.map(function (item) {
-      return { name: item.food.name, quantity: item.quantity };
-    }),
-    totalCalories: mealTotal.totalCalories,
-    totalProtein: mealTotal.totalProtein,
-    totalCarbs: mealTotal.totalCarbs,
-    totalFat: mealTotal.totalFat
-  };
+    const favoriteMeal = {
+        id: Date.now(), // unique id based on timestamp
+        items: mealTotal.items.map(function (item) {
+            return { name: item.food.name, quantity: item.quantity };
+        }),
+        totalCalories: mealTotal.totalCalories,
+        totalProtein: mealTotal.totalProtein,
+        totalCarbs: mealTotal.totalCarbs,
+        totalFat: mealTotal.totalFat
+    };
 
-  favorites.push(favoriteMeal);
-  localStorage.setItem("favorites", JSON.stringify(favorites));
+    favorites.push(favoriteMeal);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
 }
 
 function getFavorites() {
-  const stored = localStorage.getItem("favorites");
-  return stored ? JSON.parse(stored) : [];
+    const stored = localStorage.getItem("favorites");
+    return stored ? JSON.parse(stored) : [];
 }
 
 function displayFavorites() {
-  const favorites = getFavorites();
-  favoritesContainer.innerHTML = "";
+    const favorites = getFavorites();
+    favoritesContainer.innerHTML = "";
 
-  if (favorites.length === 0) {
-    favoritesContainer.innerHTML = "<p>No favorites saved yet.</p>";
-    return;
-  }
+    if (favorites.length === 0) {
+        favoritesContainer.innerHTML = "<p>No favorites saved yet.</p>";
+        return;
+    }
 
-  favorites.forEach(function (favorite) {
-    const card = document.createElement("div");
-    card.classList.add("meal-card");
+    favorites.forEach(function (favorite) {
+        const card = document.createElement("div");
+        card.classList.add("meal-card");
 
-    let foodListHTML = "";
-    favorite.items.forEach(function (item) {
-      foodListHTML += `<li>${item.name} — ${item.quantity}g</li>`;
-    });
+        let foodListHTML = "";
+        favorite.items.forEach(function (item) {
+            foodListHTML += `<li>${item.name} — ${item.quantity}g</li>`;
+        });
 
-    card.innerHTML = `
+        card.innerHTML = `
       <ul class="meal-food-list">${foodListHTML}</ul>
       <div class="meal-totals">
         Calories: ${favorite.totalCalories.toFixed(0)} kcal |
@@ -271,78 +260,78 @@ function displayFavorites() {
       </div>
     `;
 
-    favoritesContainer.appendChild(card);
-  });
+        favoritesContainer.appendChild(card);
+    });
 }
 
 function deleteFavorite(id) {
-  let favorites = getFavorites();
-  favorites = favorites.filter(function (favorite) {
-    return favorite.id !== id;
-  });
-  localStorage.setItem("favorites", JSON.stringify(favorites));
+    let favorites = getFavorites();
+    favorites = favorites.filter(function (favorite) {
+        return favorite.id !== id;
+    });
+    localStorage.setItem("favorites", JSON.stringify(favorites));
 }
 
 function getTodayKey() {
-  const today = new Date();
-  return "log-" + today.toISOString().split("T")[0]; // e.g. "log-2026-08-17"
+    const today = new Date();
+    return "log-" + today.toISOString().split("T")[0]; // e.g. "log-2026-08-17"
 }
 
 function logMeal(mealTotal) {
-  const key = getTodayKey();
-  const todayLog = getTodayLog();
+    const key = getTodayKey();
+    const todayLog = getTodayLog();
 
-  const loggedMeal = {
-    id: Date.now(),
-    items: mealTotal.items.map(function (item) {
-      return { name: item.food.name, quantity: item.quantity };
-    }),
-    totalCalories: mealTotal.totalCalories,
-    totalProtein: mealTotal.totalProtein,
-    totalCarbs: mealTotal.totalCarbs,
-    totalFat: mealTotal.totalFat
-  };
+    const loggedMeal = {
+        id: Date.now(),
+        items: mealTotal.items.map(function (item) {
+            return { name: item.food.name, quantity: item.quantity };
+        }),
+        totalCalories: mealTotal.totalCalories,
+        totalProtein: mealTotal.totalProtein,
+        totalCarbs: mealTotal.totalCarbs,
+        totalFat: mealTotal.totalFat
+    };
 
-  todayLog.push(loggedMeal);
-  localStorage.setItem(key, JSON.stringify(todayLog));
+    todayLog.push(loggedMeal);
+    localStorage.setItem(key, JSON.stringify(todayLog));
 }
 
 function getTodayLog() {
-  const key = getTodayKey();
-  const stored = localStorage.getItem(key);
-  return stored ? JSON.parse(stored) : [];
+    const key = getTodayKey();
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : [];
 }
 
 function displayDailyLog() {
-  const todayLog = getTodayLog();
-  dailyLogContainer.innerHTML = "";
+    const todayLog = getTodayLog();
+    dailyLogContainer.innerHTML = "";
 
-  if (todayLog.length === 0) {
-    dailyLogContainer.innerHTML = "<p>No meals logged today.</p>";
-    dailyTotals.innerHTML = "";
-    return;
-  }
+    if (todayLog.length === 0) {
+        dailyLogContainer.innerHTML = "<p>No meals logged today.</p>";
+        dailyTotals.innerHTML = "";
+        return;
+    }
 
-  let totalCalories = 0;
-  let totalProtein = 0;
-  let totalCarbs = 0;
-  let totalFat = 0;
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
 
-  todayLog.forEach(function (meal) {
-    totalCalories += meal.totalCalories;
-    totalProtein += meal.totalProtein;
-    totalCarbs += meal.totalCarbs;
-    totalFat += meal.totalFat;
+    todayLog.forEach(function (meal) {
+        totalCalories += meal.totalCalories;
+        totalProtein += meal.totalProtein;
+        totalCarbs += meal.totalCarbs;
+        totalFat += meal.totalFat;
 
-    const card = document.createElement("div");
-    card.classList.add("meal-card");
+        const card = document.createElement("div");
+        card.classList.add("meal-card");
 
-    let foodListHTML = "";
-    meal.items.forEach(function (item) {
-      foodListHTML += `<li>${item.name} — ${item.quantity}g</li>`;
-    });
+        let foodListHTML = "";
+        meal.items.forEach(function (item) {
+            foodListHTML += `<li>${item.name} — ${item.quantity}g</li>`;
+        });
 
-    card.innerHTML = `
+        card.innerHTML = `
       <ul class="meal-food-list">${foodListHTML}</ul>
       <div class="meal-totals">
         Calories: ${meal.totalCalories.toFixed(0)} kcal |
@@ -355,10 +344,10 @@ function displayDailyLog() {
       </div>
     `;
 
-    dailyLogContainer.appendChild(card);
-  });
+        dailyLogContainer.appendChild(card);
+    });
 
-  dailyTotals.innerHTML = `
+    dailyTotals.innerHTML = `
     <strong>Today's Totals:</strong>
     Calories: ${totalCalories.toFixed(0)} kcal |
     Protein: ${totalProtein.toFixed(1)}g |
@@ -368,12 +357,12 @@ function displayDailyLog() {
 }
 
 function deleteLoggedMeal(id) {
-  const key = getTodayKey();
-  let todayLog = getTodayLog();
-  todayLog = todayLog.filter(function (meal) {
-    return meal.id !== id;
-  });
-  localStorage.setItem(key, JSON.stringify(todayLog));
+    const key = getTodayKey();
+    let todayLog = getTodayLog();
+    todayLog = todayLog.filter(function (meal) {
+        return meal.id !== id;
+    });
+    localStorage.setItem(key, JSON.stringify(todayLog));
 }
 // Load food data from JSON file
 async function loadFoodData() {
@@ -385,7 +374,7 @@ async function loadFoodData() {
         }
 
         foodData = await response.json();
-        console.log("Food data loaded:", foodData);
+        
 
         displayFoods(foodData);
     } catch (error) {
@@ -399,43 +388,43 @@ displayFavorites();
 displayDailyLog();
 
 foodSearchInput.addEventListener("input", function () {
-  const searchTerm = foodSearchInput.value.toLowerCase();
+    const searchTerm = foodSearchInput.value.toLowerCase();
 
-  const filteredResults = foodData.filter(function (food) {
-    return food.name.toLowerCase().includes(searchTerm);
-  });
+    const filteredResults = foodData.filter(function (food) {
+        return food.name.toLowerCase().includes(searchTerm);
+    });
 
-  displayFoods(filteredResults);
+    displayFoods(filteredResults);
 });
 
 resultsContainer.addEventListener("click", function (event) {
-  if (event.target.classList.contains("save-favorite-btn")) {
-    const card = event.target.closest(".meal-card");
-    const cardIndex = Array.from(resultsContainer.children).indexOf(card);
-    const mealToSave = window.currentResults[cardIndex].combination;
+    if (event.target.classList.contains("save-favorite-btn")) {
+        const card = event.target.closest(".meal-card");
+        const cardIndex = Array.from(resultsContainer.children).indexOf(card);
+        const mealToSave = window.currentResults[cardIndex].combination;
 
-    saveFavorite(mealToSave);
-    displayFavorites();
-    alert("Meal saved to favorites!");
-  }
+        saveFavorite(mealToSave);
+        displayFavorites();
+        alert("Meal saved to favorites!");
+    }
 
-  if (event.target.classList.contains("log-meal-btn")) {
-    const card = event.target.closest(".meal-card");
-    const cardIndex = Array.from(resultsContainer.children).indexOf(card);
-    const mealToLog = window.currentResults[cardIndex].combination;
+    if (event.target.classList.contains("log-meal-btn")) {
+        const card = event.target.closest(".meal-card");
+        const cardIndex = Array.from(resultsContainer.children).indexOf(card);
+        const mealToLog = window.currentResults[cardIndex].combination;
 
-    logMeal(mealToLog);
-    displayDailyLog();
-    alert("Meal logged for today!");
-  }
+        logMeal(mealToLog);
+        displayDailyLog();
+        alert("Meal logged for today!");
+    }
 });
 
 favoritesContainer.addEventListener("click", function (event) {
-  if (event.target.classList.contains("delete-favorite-btn")) {
-    const id = Number(event.target.dataset.id);
-    deleteFavorite(id);
-    displayFavorites(); // re-render after deletion
-  }
+    if (event.target.classList.contains("delete-favorite-btn")) {
+        const id = Number(event.target.dataset.id);
+        deleteFavorite(id);
+        displayFavorites(); // re-render after deletion
+    }
 });
 
 // Handle form submission
@@ -444,8 +433,7 @@ macroForm.addEventListener("submit", function (event) {
 
     const calories = Number(document.getElementById("calories").value);
     const protein = Number(document.getElementById("protein").value);
-    // const carbs = Number(document.getElementById("carbs").value);
-    // const fat = Number(document.getElementById("fat").value);
+    
 
     // Reset previous error
     formError.textContent = "";
@@ -453,66 +441,41 @@ macroForm.addEventListener("submit", function (event) {
     // Validation checks
 
     if (!calories || !protein) {
-    formError.textContent = "Please fill in all fields.";
-    return;
-  }
+        formError.textContent = "Please fill in all fields.";
+        return;
+    }
 
-  if (calories <= 0 || protein <= 0) {
-    formError.textContent = "Values must be greater than 0.";
-    return;
-  }
-    // if (!calories || !protein || !carbs || !fat) {
-    //     formError.textContent = "Please fill in all fields.";
-    //     return;
-    // }
-
-    // if (calories <= 0 || protein <= 0 || carbs <= 0 || fat <= 0) {
-    //     formError.textContent = "Values must be greater than 0.";
-    //     return;
-    // }
-
-    console.log("Valid targets:", { calories, protein });
-    // console.log("Valid targets:", { calories, protein, carbs, fat });
-    // Check macro/calorie consistency
+    if (calories <= 0 || protein <= 0) {
+        formError.textContent = "Values must be greater than 0.";
+        return;
+    }
 
     const derived = deriveCarbsAndFat(calories, protein);
 
-  if (!derived.isPossible) {
-    consistencyWarning.style.display = "block";
-    consistencyWarning.textContent =
-      `Your protein target alone (${(protein * 4).toFixed(0)} kcal) exceeds your calorie target (${calories} kcal). Please lower protein or raise calories.`;
-    return;
-  } else {
-    consistencyWarning.style.display = "none";
-  }
+    if (!derived.isPossible) {
+        consistencyWarning.style.display = "block";
+        consistencyWarning.textContent =
+            `Your protein target alone (${(protein * 4).toFixed(0)} kcal) exceeds your calorie target (${calories} kcal). Please lower protein or raise calories.`;
+        return;
+    } else {
+        consistencyWarning.style.display = "none";
+    }
 
+    const dietPreference = document.querySelector('input[name="dietPreference"]:checked').value;
+    const filteredFoods = filterByDiet(foodData, dietPreference);
 
-    // const consistencyResult = checkMacroConsistency(calories, protein, carbs, fat);
+    const target = { calories, protein, carbs: derived.carbs, fat: derived.fat };
+    //   const target = { calories, protein, carbs, fat };
+    const results = findBestMeals(filteredFoods, target);
 
-    // if (!consistencyResult.isConsistent) {
-    //     consistencyWarning.style.display = "block";
-    //     consistencyWarning.textContent =
-    //         `Your macros add up to ${consistencyResult.derivedCalories.toFixed(0)} kcal, but your target is ${calories} kcal (${consistencyResult.percentDiff.toFixed(1)}% difference). Please adjust your values.`;
-    //     return;
-    // } else {
-    //     consistencyWarning.style.display = "none";
-    // }
-
-   const dietPreference = document.querySelector('input[name="dietPreference"]:checked').value;
-  const filteredFoods = filterByDiet(foodData, dietPreference);
-
-  const target = { calories, protein, carbs: derived.carbs, fat: derived.fat };
-//   const target = { calories, protein, carbs, fat };
-  const results = findBestMeals(filteredFoods, target);
-
-  displayResults(results);
-  document.getElementById("results-section").scrollIntoView({ behavior: "smooth", block: "start" });
+    displayResults(results);
+    document.getElementById("results-section").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 dailyLogContainer.addEventListener("click", function (event) {
-  if (event.target.classList.contains("delete-log-btn")) {
-    const id = Number(event.target.dataset.id);
-    deleteLoggedMeal(id);
-    displayDailyLog();
-  }
+    if (event.target.classList.contains("delete-log-btn")) {
+        const id = Number(event.target.dataset.id);
+        deleteLoggedMeal(id);
+        displayDailyLog();
+    }
 });
