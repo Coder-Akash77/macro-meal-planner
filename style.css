@@ -168,3 +168,12 @@ button:hover {
   padding: 8px 10px;
   border-radius: 4px;
 }
+.no-results-message {
+  background-color: #fdecea;
+  color: #c0392b;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  padding: 16px 18px;
+  text-align: center;
+  font-weight: 500;
+}

@@ -5,6 +5,11 @@ const resultsContainer = document.getElementById("results-container");
 const foodListContainer = document.getElementById("food-list-container");
 const consistencyWarning = document.getElementById("consistency-warning");
 const foodSearchInput = document.getElementById("food-search");
+const favoritesContainer = document.getElementById("favorites-container");
+const dailyLogContainer = document.getElementById("daily-log-container");
+const dailyTotals = document.getElementById("daily-totals");
+const MINIMUM_MATCH_SCORE = 70;
+
 
 // Test that JS is connected
 console.log("script.js connected successfully");
@@ -154,10 +159,13 @@ function findBestMeals(foods, target) {
 
     if (isWithinTolerance(total, target.calories)) {
       const score = calculateMatchScore(total, target);
-      validMeals.push({
-        combination: total,
-        score: score
-      });
+
+      if (score >= MINIMUM_MATCH_SCORE) {
+        validMeals.push({
+          combination: total,
+          score: score
+        });
+      }
     }
   });
 
@@ -170,12 +178,11 @@ function findBestMeals(foods, target) {
 
 function displayResults(results) {
     window.currentResults = results;
-    
+
   resultsContainer.innerHTML = ""; // clear previous content
 
   if (results.length === 0) {
-    resultsContainer.innerHTML = "<p>No combination found within the selected tolerance.</p>";
-    return;
+resultsContainer.innerHTML = "<div class='no-results-message'>No combination found within the selected tolerance. Try adjusting your calorie or protein target.</div>";    return;
   }
 
   const topResults = results.slice(0, 5); // show top 5 matches only
@@ -202,6 +209,7 @@ function displayResults(results) {
       </div>
       <div class="meal-card-actions">
         <button class="save-favorite-btn">Save to Favorites</button>
+        <button class="log-meal-btn">Log This Meal</button>
       </div>
     `;
 
@@ -232,6 +240,141 @@ function getFavorites() {
   return stored ? JSON.parse(stored) : [];
 }
 
+function displayFavorites() {
+  const favorites = getFavorites();
+  favoritesContainer.innerHTML = "";
+
+  if (favorites.length === 0) {
+    favoritesContainer.innerHTML = "<p>No favorites saved yet.</p>";
+    return;
+  }
+
+  favorites.forEach(function (favorite) {
+    const card = document.createElement("div");
+    card.classList.add("meal-card");
+
+    let foodListHTML = "";
+    favorite.items.forEach(function (item) {
+      foodListHTML += `<li>${item.name} — ${item.quantity}g</li>`;
+    });
+
+    card.innerHTML = `
+      <ul class="meal-food-list">${foodListHTML}</ul>
+      <div class="meal-totals">
+        Calories: ${favorite.totalCalories.toFixed(0)} kcal |
+        Protein: ${favorite.totalProtein.toFixed(1)}g |
+        Carbs: ${favorite.totalCarbs.toFixed(1)}g |
+        Fat: ${favorite.totalFat.toFixed(1)}g
+      </div>
+      <div class="meal-card-actions">
+        <button class="delete-favorite-btn" data-id="${favorite.id}">Remove</button>
+      </div>
+    `;
+
+    favoritesContainer.appendChild(card);
+  });
+}
+
+function deleteFavorite(id) {
+  let favorites = getFavorites();
+  favorites = favorites.filter(function (favorite) {
+    return favorite.id !== id;
+  });
+  localStorage.setItem("favorites", JSON.stringify(favorites));
+}
+
+function getTodayKey() {
+  const today = new Date();
+  return "log-" + today.toISOString().split("T")[0]; // e.g. "log-2026-08-17"
+}
+
+function logMeal(mealTotal) {
+  const key = getTodayKey();
+  const todayLog = getTodayLog();
+
+  const loggedMeal = {
+    id: Date.now(),
+    items: mealTotal.items.map(function (item) {
+      return { name: item.food.name, quantity: item.quantity };
+    }),
+    totalCalories: mealTotal.totalCalories,
+    totalProtein: mealTotal.totalProtein,
+    totalCarbs: mealTotal.totalCarbs,
+    totalFat: mealTotal.totalFat
+  };
+
+  todayLog.push(loggedMeal);
+  localStorage.setItem(key, JSON.stringify(todayLog));
+}
+
+function getTodayLog() {
+  const key = getTodayKey();
+  const stored = localStorage.getItem(key);
+  return stored ? JSON.parse(stored) : [];
+}
+
+function displayDailyLog() {
+  const todayLog = getTodayLog();
+  dailyLogContainer.innerHTML = "";
+
+  if (todayLog.length === 0) {
+    dailyLogContainer.innerHTML = "<p>No meals logged today.</p>";
+    dailyTotals.innerHTML = "";
+    return;
+  }
+
+  let totalCalories = 0;
+  let totalProtein = 0;
+  let totalCarbs = 0;
+  let totalFat = 0;
+
+  todayLog.forEach(function (meal) {
+    totalCalories += meal.totalCalories;
+    totalProtein += meal.totalProtein;
+    totalCarbs += meal.totalCarbs;
+    totalFat += meal.totalFat;
+
+    const card = document.createElement("div");
+    card.classList.add("meal-card");
+
+    let foodListHTML = "";
+    meal.items.forEach(function (item) {
+      foodListHTML += `<li>${item.name} — ${item.quantity}g</li>`;
+    });
+
+    card.innerHTML = `
+      <ul class="meal-food-list">${foodListHTML}</ul>
+      <div class="meal-totals">
+        Calories: ${meal.totalCalories.toFixed(0)} kcal |
+        Protein: ${meal.totalProtein.toFixed(1)}g |
+        Carbs: ${meal.totalCarbs.toFixed(1)}g |
+        Fat: ${meal.totalFat.toFixed(1)}g
+      </div>
+      <div class="meal-card-actions">
+        <button class="delete-log-btn" data-id="${meal.id}">Remove</button>
+      </div>
+    `;
+
+    dailyLogContainer.appendChild(card);
+  });
+
+  dailyTotals.innerHTML = `
+    <strong>Today's Totals:</strong>
+    Calories: ${totalCalories.toFixed(0)} kcal |
+    Protein: ${totalProtein.toFixed(1)}g |
+    Carbs: ${totalCarbs.toFixed(1)}g |
+    Fat: ${totalFat.toFixed(1)}g
+  `;
+}
+
+function deleteLoggedMeal(id) {
+  const key = getTodayKey();
+  let todayLog = getTodayLog();
+  todayLog = todayLog.filter(function (meal) {
+    return meal.id !== id;
+  });
+  localStorage.setItem(key, JSON.stringify(todayLog));
+}
 // Load food data from JSON file
 async function loadFoodData() {
     try {
@@ -252,6 +395,8 @@ async function loadFoodData() {
 }
 
 loadFoodData();
+displayFavorites();
+displayDailyLog();
 
 foodSearchInput.addEventListener("input", function () {
   const searchTerm = foodSearchInput.value.toLowerCase();
@@ -270,7 +415,26 @@ resultsContainer.addEventListener("click", function (event) {
     const mealToSave = window.currentResults[cardIndex].combination;
 
     saveFavorite(mealToSave);
+    displayFavorites();
     alert("Meal saved to favorites!");
+  }
+
+  if (event.target.classList.contains("log-meal-btn")) {
+    const card = event.target.closest(".meal-card");
+    const cardIndex = Array.from(resultsContainer.children).indexOf(card);
+    const mealToLog = window.currentResults[cardIndex].combination;
+
+    logMeal(mealToLog);
+    displayDailyLog();
+    alert("Meal logged for today!");
+  }
+});
+
+favoritesContainer.addEventListener("click", function (event) {
+  if (event.target.classList.contains("delete-favorite-btn")) {
+    const id = Number(event.target.dataset.id);
+    deleteFavorite(id);
+    displayFavorites(); // re-render after deletion
   }
 });
 
@@ -345,3 +509,10 @@ macroForm.addEventListener("submit", function (event) {
   document.getElementById("results-section").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
+dailyLogContainer.addEventListener("click", function (event) {
+  if (event.target.classList.contains("delete-log-btn")) {
+    const id = Number(event.target.dataset.id);
+    deleteLoggedMeal(id);
+    displayDailyLog();
+  }
+});
