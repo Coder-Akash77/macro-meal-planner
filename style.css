@@ -36,6 +36,112 @@ body {
   line-height: 1.6;
 }
 
+/* ===== Login ===== */
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at top right, #d9f5e4 0, transparent 38%), var(--bg);
+}
+
+.login-page.hidden {
+  display: none;
+}
+
+.login-panel {
+  width: min(100%, 440px);
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 38px;
+  box-shadow: 0 18px 50px rgba(26, 43, 34, 0.1);
+}
+
+.login-brand {
+  color: var(--primary-dark);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  color: var(--primary-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.login-panel h1 {
+  font-size: 1.9rem;
+  line-height: 1.2;
+  margin: 5px 0 8px;
+}
+
+.login-intro,
+.login-note,
+.section-description {
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.login-intro {
+  margin-bottom: 22px;
+}
+
+.role-switcher {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  padding: 5px;
+  margin-bottom: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.role-option {
+  border: 0;
+  border-radius: 6px;
+  padding: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 500 0.88rem inherit;
+  cursor: pointer;
+}
+
+.role-option.active {
+  background: white;
+  color: var(--primary-dark);
+  box-shadow: var(--shadow-card);
+}
+
+.login-note {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 0.74rem;
+}
+
+.app-shell {
+  display: none;
+}
+
+.app-shell.visible {
+  display: block;
+}
+
+.navbar.app-shell.visible {
+  display: flex;
+}
+
+.nav-tab.admin-only {
+  display: none;
+}
+
+.nav-tab.admin-only.visible {
+  display: block;
+}
+
 /* ===== Navbar ===== */
 .navbar {
   display: flex;
@@ -306,7 +412,9 @@ section h2 {
 }
 
 .form-group input[type="number"],
-.form-group input[type="text"] {
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group select {
   padding: 11px 13px;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
@@ -315,6 +423,10 @@ section h2 {
   background-color: #fbfdfc;
   color: var(--text-main);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-group select {
+  appearance: auto;
 }
 
 .form-group input:focus {
@@ -431,6 +543,77 @@ button[type="submit"]:active {
   font-size: 0.78rem;
   color: var(--text-muted);
   margin-top: 3px;
+}
+
+/* ===== Admin ===== */
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-heading h2 {
+  margin-bottom: 3px;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.nutrition-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.admin-form .form-group input,
+.admin-form .form-group select {
+  width: 100%;
+}
+
+.count-badge {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: var(--accent-light);
+  color: var(--primary-dark);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.form-message {
+  color: var(--primary-dark);
+  font-size: 0.82rem;
+  margin-top: 10px;
+}
+
+.empty-message {
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.custom-food-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.delete-custom-food-btn {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font: 500 0.78rem inherit;
+  cursor: pointer;
+}
+
+.delete-custom-food-btn:hover {
+  background: var(--danger);
+  color: white;
 }
 
 /* ===== Result / Favorite / Log Cards ===== */
@@ -596,6 +779,15 @@ button[type="submit"]:active {
 }
 
 @media (max-width: 480px) {
+  .login-panel {
+    padding: 26px 20px;
+  }
+
+  .admin-form-grid,
+  .nutrition-grid {
+    grid-template-columns: 1fr;
+  }
+
   .hero-text h1 {
     font-size: 1.7rem;
   }
