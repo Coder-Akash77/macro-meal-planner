@@ -9,7 +9,21 @@ const favoritesContainer = document.getElementById("favorites-container");
 const dailyLogContainer = document.getElementById("daily-log-container");
 const dailyTotals = document.getElementById("daily-totals");
 const MINIMUM_MATCH_SCORE = 70;
+const navTabs = document.querySelectorAll(".nav-tab");
+const tabPages = document.querySelectorAll(".tab-page");
 
+
+function switchTab(tabName) {
+  tabPages.forEach(function (page) {
+    page.classList.remove("active");
+  });
+  navTabs.forEach(function (tab) {
+    tab.classList.remove("active");
+  });
+
+  document.getElementById("tab-" + tabName).classList.add("active");
+  document.querySelector('.nav-tab[data-tab="' + tabName + '"]').classList.add("active");
+}
 
 let foodData = []; // will hold our loaded food list
 
@@ -377,6 +391,7 @@ async function loadFoodData() {
         
 
         displayFoods(foodData);
+        document.getElementById("stat-food-count").textContent = foodData.length;
     } catch (error) {
         console.error("Error loading food data:", error);
         formError.textContent = "Could not load food data. Please refresh the page.";
@@ -478,4 +493,21 @@ dailyLogContainer.addEventListener("click", function (event) {
         deleteLoggedMeal(id);
         displayDailyLog();
     }
+});
+
+navTabs.forEach(function (tab) {
+  tab.addEventListener("click", function () {
+    switchTab(tab.dataset.tab);
+  });
+});
+
+document.getElementById("go-to-planner").addEventListener("click", function () {
+  switchTab("planner");
+});
+
+document.getElementById("go-to-database").addEventListener("click", function () {
+  switchTab("database");
+});
+document.querySelector(".nav-logo").addEventListener("click", function () {
+  switchTab("home");
 });
