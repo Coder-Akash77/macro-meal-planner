@@ -138,6 +138,14 @@ body {
   display: flex;
 }
 
+.tab-page.app-shell.visible {
+  display: none;
+}
+
+.tab-page.app-shell.visible.active {
+  display: block;
+}
+
 .nav-tab.admin-only {
   display: none;
 }
