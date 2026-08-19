@@ -126,6 +126,10 @@ body {
   display: none;
 }
 
+.app-shell:not(.visible) {
+  display: none !important;
+}
+
 .app-shell.visible {
   display: block;
 }
