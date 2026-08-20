@@ -8,25 +8,53 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 
 <body>
 
+    <!-- ============ LOGIN ============ -->
+    <div id="login-page" class="login-page">
+        <div class="login-panel">
+            <div class="login-brand">🍗 <span>MacroMeal</span></div>
+            <p class="eyebrow">Macro nutrition planner</p>
+            <h1>Welcome </h1>
+            <p class="login-intro">Choose your workspace to continue.</p>
+            <div class="role-switcher" role="tablist" aria-label="Choose account type">
+                <button type="button" class="role-option active" data-role="user">User</button>
+                <button type="button" class="role-option" data-role="admin">Admin</button>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" autocomplete="username" required placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" autocomplete="current-password" required placeholder="Enter your password">
+                </div>
+                <button type="submit">Continue as <span id="selected-role-label">User</span></button>
+                <p id="login-error" class="error-message" role="alert"></p>
+            </form>
+            <p class="login-note">Demo admin login: <strong>admin</strong> / <strong>admin123</strong></p>
+        </div>
+    </div>
+
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="nav-logo">🍗<span>MacroMeal</span>🥗</div>
+        <div class="nav-logo">🍗 <span>MacroMeal</span></div>
         <div class="nav-tabs">
             <button class="nav-tab active" data-tab="home">Home</button>
             <button class="nav-tab" data-tab="planner">Meal Planner</button>
             <button class="nav-tab" data-tab="database">Food Database</button>
+            <button class="nav-tab admin-only" data-tab="admin">Admin</button>
             <button class="nav-tab" data-tab="favorites">Favorites</button>
             <button class="nav-tab" data-tab="log">Daily Log</button>
         </div>
     </nav>
 
     <!-- ============ HOME TAB ============ -->
-    <div class="tab-page active" id="tab-home">
+    <div class="tab-page active app-shell" id="tab-home">
         <section class="hero">
             <div class="hero-text">
                 <h1>Hit your macros. <span class="accent-text">Effortlessly.</span></h1>
@@ -83,7 +111,7 @@
     </div>
 
     <!-- ============ MEAL PLANNER TAB ============ -->
-    <div class="tab-page" id="tab-planner">
+    <div class="tab-page app-shell" id="tab-planner">
         <main>
             <section id="macro-form-section">
                 <h2>Set Your Targets</h2>
@@ -132,7 +160,7 @@
     </div>
 
     <!-- ============ FOOD DATABASE TAB ============ -->
-    <div class="tab-page" id="tab-database">
+    <div class="tab-page app-shell" id="tab-database">
         <main>
             <section id="food-list-section">
                 <div class="database-heading">
@@ -159,8 +187,43 @@
         </main>
     </div>
 
+    <!-- ============ ADMIN TAB ============ -->
+    <div class="tab-page app-shell" id="tab-admin">
+        <main>
+            <section id="admin-section">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Admin workspace</p>
+                        <h2>Add Food Item</h2>
+                    </div>
+                    <span class="count-badge" id="custom-food-count">0 custom</span>
+                </div>
+                <p class="section-description">Nutrition values are saved on this device and become available in the meal planner.</p>
+                <form id="food-form" class="admin-form">
+                    <div class="form-group"><label for="food-name">Food name</label><input type="text" id="food-name" name="name" required placeholder="e.g. Tempeh, cooked"></div>
+                    <div class="admin-form-grid">
+                        <div class="form-group"><label for="food-category">Category</label><select id="food-category" name="category"><option>Protein</option><option>Carbs</option><option>Fat</option><option>Dairy</option><option>Vegetable</option></select></div>
+                        <div class="form-group"><label for="food-diet">Diet type</label><select id="food-diet" name="dietType"><option value="veg">Vegetarian</option><option value="non-veg">Non-vegetarian</option></select></div>
+                    </div>
+                    <div class="admin-form-grid nutrition-grid">
+                        <div class="form-group"><label for="food-calories">Calories / 100g</label><input type="number" id="food-calories" name="calories" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-protein">Protein (g)</label><input type="number" id="food-protein" name="protein" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-carbs">Carbs (g)</label><input type="number" id="food-carbs" name="carbs" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-fat">Fat (g)</label><input type="number" id="food-fat" name="fat" min="0" step="0.1" required></div>
+                    </div>
+                    <button type="submit">Add food to database</button>
+                    <p id="food-form-message" class="form-message" role="status"></p>
+                </form>
+            </section>
+            <section>
+                <h2>Manage Food Items</h2>
+                <div id="custom-foods-container"><p class="empty-message">Food items will appear here after loading.</p></div>
+            </section>
+        </main>
+    </div>
+
     <!-- ============ FAVORITES TAB ============ -->
-    <div class="tab-page" id="tab-favorites">
+    <div class="tab-page app-shell" id="tab-favorites">
         <main>
             <section id="favorites-section">
                 <h2>Your Favorite Meals</h2>
@@ -172,7 +235,7 @@
     </div>
 
     <!-- ============ DAILY LOG TAB ============ -->
-    <div class="tab-page" id="tab-log">
+    <div class="tab-page app-shell" id="tab-log">
         <main>
             <section id="daily-log-section">
                 <h2>Today's Meal Log</h2>
@@ -184,7 +247,7 @@
         </main>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=3"></script>
 </body>
 
 </html>

@@ -8,15 +8,19 @@ const foodSearchInput = document.getElementById("food-search");
 const favoritesContainer = document.getElementById("favorites-container");
 const dailyLogContainer = document.getElementById("daily-log-container");
 const dailyTotals = document.getElementById("daily-totals");
-const foodCount = document.getElementById("food-count");
-const dietFilterButtons = document.querySelectorAll(".diet-filter-btn");
 const MINIMUM_MATCH_SCORE = 70;
 const navTabs = document.querySelectorAll(".nav-tab");
 const tabPages = document.querySelectorAll(".tab-page");
-let selectedDietFilter = "all";
 
 
-function switchTab(tabName) {
+function switchTab(tabName, updateUrl) {
+    const targetPage = document.getElementById("tab-" + tabName);
+    const targetTab = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
+
+    if (!targetPage || !targetTab) {
+        return;
+    }
+
   tabPages.forEach(function (page) {
     page.classList.remove("active");
   });
@@ -24,11 +28,73 @@ function switchTab(tabName) {
     tab.classList.remove("active");
   });
 
-  document.getElementById("tab-" + tabName).classList.add("active");
-  document.querySelector('.nav-tab[data-tab="' + tabName + '"]').classList.add("active");
+    targetPage.classList.add("active");
+    targetTab.classList.add("active");
+
+    if (updateUrl !== false && window.location.hash !== "#" + tabName) {
+        window.history.pushState(null, "", "#" + tabName);
+    }
 }
 
+function getTabFromUrl() {
+    const tabName = window.location.hash.slice(1);
+    return document.getElementById("tab-" + tabName) ? tabName : "home";
+}
+
+window.addEventListener("hashchange", function () {
+    switchTab(getTabFromUrl(), false);
+});
+
+document.addEventListener("click", function (event) {
+    const tab = event.target.closest(".nav-tab");
+
+    if (tab) {
+        event.preventDefault();
+        switchTab(tab.dataset.tab);
+    }
+});
+
 let foodData = []; // will hold our loaded food list
+const CUSTOM_FOODS_KEY = "macro-meal-custom-foods";
+const DELETED_FOODS_KEY = "macro-meal-deleted-food-ids";
+
+function getCustomFoods() {
+    const storedFoods = localStorage.getItem(CUSTOM_FOODS_KEY);
+    return storedFoods ? JSON.parse(storedFoods) : [];
+}
+
+function saveCustomFoods(foods) {
+    localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(foods));
+}
+
+function getDeletedFoodIds() {
+    const storedIds = localStorage.getItem(DELETED_FOODS_KEY);
+    return storedIds ? JSON.parse(storedIds) : [];
+}
+
+function saveDeletedFoodIds(ids) {
+    localStorage.setItem(DELETED_FOODS_KEY, JSON.stringify(ids));
+}
+
+function displayCustomFoods() {
+    customFoodCount.textContent = foodData.length + " total";
+    customFoodsContainer.innerHTML = "";
+
+    if (foodData.length === 0) {
+        customFoodsContainer.innerHTML = "<p class='empty-message'>No food items available.</p>";
+        return;
+    }
+
+    foodData.forEach(function (food) {
+        const foodItem = document.createElement("div");
+        foodItem.classList.add("food-item", "custom-food-item");
+        foodItem.innerHTML = `
+            <div><strong>${food.name}</strong><p>${food.caloriesPer100g} kcal | P ${food.proteinPer100g}g | C ${food.carbsPer100g}g | F ${food.fatPer100g}g | ${food.category} | ${food.dietType}</p></div>
+            <button class="delete-custom-food-btn" data-id="${food.id}" type="button">Remove</button>
+        `;
+        customFoodsContainer.appendChild(foodItem);
+    });
+}
 
 // Render the food list on the page
 function displayFoods(foods) {
@@ -414,10 +480,14 @@ async function loadFoodData() {
             throw new Error("Failed to load food data: " + response.status);
         }
 
-        foodData = await response.json();
-        
+        const deletedFoodIds = getDeletedFoodIds().map(String);
+        const builtInFoods = (await response.json()).filter(function (food) {
+            return !deletedFoodIds.includes(String(food.id));
+        });
+        foodData = builtInFoods.concat(getCustomFoods());
 
         displayFoods(foodData);
+        displayCustomFoods();
         document.getElementById("stat-food-count").textContent = foodData.length;
     } catch (error) {
         console.error("Error loading food data:", error);
@@ -428,6 +498,95 @@ async function loadFoodData() {
 loadFoodData();
 displayFavorites();
 displayDailyLog();
+displayCustomFoods();
+
+roleOptions.forEach(function (option) {
+    option.addEventListener("click", function () {
+        selectedRole = option.dataset.role;
+        roleOptions.forEach(function (roleOption) {
+            roleOption.classList.toggle("active", roleOption === option);
+        });
+        selectedRoleLabel.textContent = selectedRole === "admin" ? "Admin" : "User";
+        loginError.textContent = "";
+    });
+});
+
+loginForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const username = document.getElementById("login-username").value.trim();
+    const password = document.getElementById("login-password").value;
+
+    if (!username || !password) {
+        loginError.textContent = "Enter your username and password.";
+        return;
+    }
+
+    if (selectedRole === "admin" && (username !== "admin" || password !== "admin123")) {
+        loginError.textContent = "Use the demo admin credentials shown below.";
+        return;
+    }
+
+    document.getElementById("login-page").classList.add("hidden");
+    document.querySelectorAll(".app-shell").forEach(function (element) {
+        element.classList.add("visible");
+    });
+    adminNavTab.classList.toggle("visible", selectedRole === "admin");
+    switchTab(selectedRole === "admin" ? "admin" : "home");
+});
+
+foodForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const formData = new FormData(foodForm);
+    const customFood = {
+        id: "custom-" + Date.now(),
+        name: formData.get("name").trim(),
+        category: formData.get("category"),
+        dietType: formData.get("dietType"),
+        caloriesPer100g: Number(formData.get("calories")),
+        proteinPer100g: Number(formData.get("protein")),
+        carbsPer100g: Number(formData.get("carbs")),
+        fatPer100g: Number(formData.get("fat")),
+        source: "Added locally"
+    };
+
+    const customFoods = getCustomFoods();
+    customFoods.push(customFood);
+    saveCustomFoods(customFoods);
+    foodData.push(customFood);
+    displayCustomFoods();
+    displayFoods(foodData);
+    document.getElementById("stat-food-count").textContent = foodData.length;
+    foodForm.reset();
+    foodFormMessage.textContent = customFood.name + " was added to the database.";
+});
+
+customFoodsContainer.addEventListener("click", function (event) {
+    if (!event.target.classList.contains("delete-custom-food-btn")) {
+        return;
+    }
+
+    const foodId = event.target.dataset.id;
+    const isCustomFood = getCustomFoods().some(function (food) {
+        return String(food.id) === foodId;
+    });
+
+    if (isCustomFood) {
+        saveCustomFoods(getCustomFoods().filter(function (food) {
+            return String(food.id) !== foodId;
+        }));
+    } else {
+        const deletedFoodIds = getDeletedFoodIds();
+        deletedFoodIds.push(foodId);
+        saveDeletedFoodIds(deletedFoodIds);
+    }
+
+    foodData = foodData.filter(function (food) {
+        return String(food.id) !== foodId;
+    });
+    displayCustomFoods();
+    displayFoods(foodData);
+    document.getElementById("stat-food-count").textContent = foodData.length;
+});
 
 foodSearchInput.addEventListener("input", renderFilteredFoods);
 
@@ -524,12 +683,6 @@ dailyLogContainer.addEventListener("click", function (event) {
         deleteLoggedMeal(id);
         displayDailyLog();
     }
-});
-
-navTabs.forEach(function (tab) {
-  tab.addEventListener("click", function () {
-    switchTab(tab.dataset.tab);
-  });
 });
 
 document.getElementById("go-to-planner").addEventListener("click", function () {
