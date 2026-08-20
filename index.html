@@ -15,7 +15,7 @@
 
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="nav-logo">🍗 <span>MacroMeal</span></div>
+        <div class="nav-logo">🍗<span>MacroMeal</span>🥗</div>
         <div class="nav-tabs">
             <button class="nav-tab active" data-tab="home">Home</button>
             <button class="nav-tab" data-tab="planner">Meal Planner</button>
@@ -31,7 +31,7 @@
             <div class="hero-text">
                 <h1>Hit your macros. <span class="accent-text">Effortlessly.</span></h1>
                 <p>MacroMeal Planner searches real food combinations and ranks them by how closely they match your
-                    calorie and protein targets — no spreadsheets, no guesswork.</p>
+                    calorie, protein, carb, and fat targets — no spreadsheets, no guesswork.</p>
                 <div class="hero-buttons">
                     <button class="btn-primary" id="go-to-planner">Generate a Meal Plan</button>
                     <button class="btn-outline" id="go-to-database">Browse Food Database</button>
@@ -99,6 +99,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="carbs">Carbs (g)</label>
+                        <input type="number" id="carbs" name="carbs" min="0" placeholder="e.g. 50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fat">Fat (g)</label>
+                        <input type="number" id="fat" name="fat" min="0" placeholder="e.g. 20">
+                    </div>
+
+                    <div class="form-group">
                         <label>Dietary Preference</label>
                         <div class="radio-group">
                             <label><input type="radio" name="dietPreference" value="veg" checked> Vegetarian</label>
@@ -125,8 +135,25 @@
     <div class="tab-page" id="tab-database">
         <main>
             <section id="food-list-section">
-                <h2>Food Database</h2>
-                <input type="text" id="food-search" placeholder="Search foods by name...">
+                <div class="database-heading">
+                    <div>
+                        <span class="section-kicker">EXPLORE YOUR OPTIONS</span>
+                        <h2>Food Database</h2>
+                        <p class="database-intro">Browse nutrition per 100g and find ingredients that fit your plan.</p>
+                    </div>
+                    <span class="food-count" id="food-count">0 foods</span>
+                </div>
+                <div class="database-context" aria-label="Food database details">
+                    <span><span class="context-dot"></span>Nutrition snapshot</span>
+                    <span>Values shown per 100g</span>
+                </div>
+                <label class="search-label" for="food-search">Search by food name</label>
+                <input type="text" id="food-search" placeholder="Try chicken, rice, almonds...">
+                <div class="diet-filter" role="group" aria-label="Filter foods by diet">
+                    <button type="button" class="diet-filter-btn active" data-diet-filter="all">All foods</button>
+                    <button type="button" class="diet-filter-btn" data-diet-filter="veg">Vegetarian</button>
+                    <button type="button" class="diet-filter-btn" data-diet-filter="non-veg">Non-vegetarian</button>
+                </div>
                 <div id="food-list-container"></div>
             </section>
         </main>

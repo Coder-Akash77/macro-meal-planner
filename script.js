@@ -8,9 +8,12 @@ const foodSearchInput = document.getElementById("food-search");
 const favoritesContainer = document.getElementById("favorites-container");
 const dailyLogContainer = document.getElementById("daily-log-container");
 const dailyTotals = document.getElementById("daily-totals");
+const foodCount = document.getElementById("food-count");
+const dietFilterButtons = document.querySelectorAll(".diet-filter-btn");
 const MINIMUM_MATCH_SCORE = 70;
 const navTabs = document.querySelectorAll(".nav-tab");
 const tabPages = document.querySelectorAll(".tab-page");
+let selectedDietFilter = "all";
 
 
 function switchTab(tabName) {
@@ -30,14 +33,29 @@ let foodData = []; // will hold our loaded food list
 // Render the food list on the page
 function displayFoods(foods) {
     foodListContainer.innerHTML = ""; // clear previous content
+        foodCount.textContent = `${foods.length} ${foods.length === 1 ? "food" : "foods"}`;
+
+        if (foods.length === 0) {
+                foodListContainer.innerHTML = '<p class="empty-foods">No foods match your search.</p>';
+                return;
+        }
 
     foods.forEach(function (food) {
         const foodItem = document.createElement("div");
         foodItem.classList.add("food-item");
 
         foodItem.innerHTML = `
-      <strong>${food.name}</strong>
-      <p>Calories: ${food.caloriesPer100g} | Protein: ${food.proteinPer100g}g | Carbs: ${food.carbsPer100g}g | Fat: ${food.fatPer100g}g | Diet: ${food.dietType}</p>
+            <div class="food-item-topline">
+                <span class="food-category">${food.category}</span>
+                <span class="food-diet">${food.dietType === "veg" ? "Vegetarian" : "Non-veg"}</span>
+            </div>
+            <strong>${food.name}</strong>
+            <div class="food-calories">${food.caloriesPer100g} kcal <span>per 100g</span></div>
+            <div class="food-macros">
+                <span><b>${food.proteinPer100g}g</b> protein</span>
+                <span><b>${food.carbsPer100g}g</b> carbs</span>
+                <span><b>${food.fatPer100g}g</b> fat</span>
+            </div>
     `;
 
         foodListContainer.appendChild(foodItem);
@@ -52,6 +70,17 @@ function filterByDiet(foods, preference) {
         });
     }
     return foods; // "non-veg" or "both" -> no exclusion
+}
+
+function renderFilteredFoods() {
+    const searchTerm = foodSearchInput.value.toLowerCase().trim();
+    const filteredResults = foodData.filter(function (food) {
+        const matchesSearch = food.name.toLowerCase().includes(searchTerm);
+        const matchesDiet = selectedDietFilter === "all" || food.dietType === selectedDietFilter;
+        return matchesSearch && matchesDiet;
+    });
+
+    displayFoods(filteredResults);
 }
 
 function calculateNutrition(food, quantityInGrams) {
@@ -69,29 +98,16 @@ function calculateNutrition(food, quantityInGrams) {
 
 
 
-function deriveCarbsAndFat(calories, protein) {
-    const proteinCalories = protein * 4;
-    const remainingCalories = calories - proteinCalories;
-
-    const carbsCalories = remainingCalories * 0.5;
-    const fatCalories = remainingCalories * 0.5;
-
-    const carbsGrams = carbsCalories / 4;
-    const fatGrams = fatCalories / 9;
-
-    return {
-        carbs: carbsGrams,
-        fat: fatGrams,
-        isPossible: remainingCalories > 0
-    };
-}
-
-const SERVING_SIZES = [50, 100, 150, 200]; // grams to try per food
+const SERVING_SIZES = [25, 50, 75, 100, 125, 150, 175, 200]; // grams to try per food
 
 function generateCombinations(foods) {
     const combinations = [];
 
     for (let i = 0; i < foods.length; i++) {
+        SERVING_SIZES.forEach(function (quantity) {
+            combinations.push([{ food: foods[i], quantity: quantity }]);
+        });
+
         for (let j = i + 1; j < foods.length; j++) {
             SERVING_SIZES.forEach(function (qty1) {
                 SERVING_SIZES.forEach(function (qty2) {
@@ -99,6 +115,16 @@ function generateCombinations(foods) {
                         { food: foods[i], quantity: qty1 },
                         { food: foods[j], quantity: qty2 }
                     ]);
+
+                    for (let k = j + 1; k < foods.length; k++) {
+                        SERVING_SIZES.forEach(function (qty3) {
+                            combinations.push([
+                                { food: foods[i], quantity: qty1 },
+                                { food: foods[j], quantity: qty2 },
+                                { food: foods[k], quantity: qty3 }
+                            ]);
+                        });
+                    }
                 });
             });
         }
@@ -145,7 +171,8 @@ function calculateMatchScore(combinationTotal, target) {
     const carbsDiff = Math.abs(combinationTotal.totalCarbs - target.carbs) / target.carbs;
     const fatDiff = Math.abs(combinationTotal.totalFat - target.fat) / target.fat;
 
-    const averageDiff = (calorieDiff + proteinDiff + carbsDiff + fatDiff) / 4;
+    // Macro grams are the user's primary targets; calories are a secondary check.
+    const averageDiff = (calorieDiff * 0.2) + (proteinDiff * 0.3) + (carbsDiff * 0.3) + (fatDiff * 0.2);
 
     const matchScore = Math.max(0, (1 - averageDiff) * 100);
 
@@ -184,7 +211,7 @@ function displayResults(results) {
     resultsContainer.innerHTML = ""; // clear previous content
 
     if (results.length === 0) {
-        resultsContainer.innerHTML = "<div class='no-results-message'>No combination found within the selected tolerance. Try adjusting your calorie or protein target.</div>"; 
+        resultsContainer.innerHTML = "<div class='no-results-message'>No combination found within the selected tolerance. Try adjusting your calorie, protein, carb, or fat target.</div>";
         return;
     }
 
@@ -402,14 +429,18 @@ loadFoodData();
 displayFavorites();
 displayDailyLog();
 
-foodSearchInput.addEventListener("input", function () {
-    const searchTerm = foodSearchInput.value.toLowerCase();
+foodSearchInput.addEventListener("input", renderFilteredFoods);
 
-    const filteredResults = foodData.filter(function (food) {
-        return food.name.toLowerCase().includes(searchTerm);
+dietFilterButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+        selectedDietFilter = button.dataset.dietFilter;
+
+        dietFilterButtons.forEach(function (filterButton) {
+            filterButton.classList.toggle("active", filterButton === button);
+        });
+
+        renderFilteredFoods();
     });
-
-    displayFoods(filteredResults);
 });
 
 resultsContainer.addEventListener("click", function (event) {
@@ -448,29 +479,30 @@ macroForm.addEventListener("submit", function (event) {
 
     const calories = Number(document.getElementById("calories").value);
     const protein = Number(document.getElementById("protein").value);
-    
+    const carbs = Number(document.getElementById("carbs").value);
+    const fat = Number(document.getElementById("fat").value);
 
     // Reset previous error
     formError.textContent = "";
 
     // Validation checks
 
-    if (!calories || !protein) {
+    if (!calories || !protein || !carbs || !fat) {
         formError.textContent = "Please fill in all fields.";
         return;
     }
 
-    if (calories <= 0 || protein <= 0) {
+    if (calories <= 0 || protein <= 0 || carbs <= 0 || fat <= 0) {
         formError.textContent = "Values must be greater than 0.";
         return;
     }
 
-    const derived = deriveCarbsAndFat(calories, protein);
+    const macroCalories = protein * 4 + carbs * 4 + fat * 9;
 
-    if (!derived.isPossible) {
+    if (macroCalories > calories) {
         consistencyWarning.style.display = "block";
         consistencyWarning.textContent =
-            `Your protein target alone (${(protein * 4).toFixed(0)} kcal) exceeds your calorie target (${calories} kcal). Please lower protein or raise calories.`;
+            `Your macro targets total ${macroCalories.toFixed(0)} kcal, which exceeds your calorie target of ${calories} kcal. Please adjust your targets.`;
         return;
     } else {
         consistencyWarning.style.display = "none";
@@ -479,8 +511,7 @@ macroForm.addEventListener("submit", function (event) {
     const dietPreference = document.querySelector('input[name="dietPreference"]:checked').value;
     const filteredFoods = filterByDiet(foodData, dietPreference);
 
-    const target = { calories, protein, carbs: derived.carbs, fat: derived.fat };
-    //   const target = { calories, protein, carbs, fat };
+    const target = { calories, protein, carbs, fat };
     const results = findBestMeals(filteredFoods, target);
 
     displayResults(results);
