@@ -12,6 +12,24 @@ const MINIMUM_MATCH_SCORE = 70;
 const navTabs = document.querySelectorAll(".nav-tab");
 const tabPages = document.querySelectorAll(".tab-page");
 
+// Login page elements
+const loginForm = document.getElementById("login-form");
+const loginError = document.getElementById("login-error");
+const roleOptions = document.querySelectorAll(".role-option");
+const selectedRoleLabel = document.getElementById("selected-role-label");
+const adminNavTab = document.querySelector('.nav-tab[data-tab="admin"]');
+let selectedRole = "user";
+
+// Admin form elements
+const foodForm = document.getElementById("food-form");
+const foodFormMessage = document.getElementById("food-form-message");
+const customFoodsContainer = document.getElementById("custom-foods-container");
+const customFoodCount = document.getElementById("custom-food-count");
+
+// Hero buttons
+const goToPlannerBtn = document.getElementById("go-to-planner");
+const goToDatabaseBtn = document.getElementById("go-to-database");
+
 
 function switchTab(tabName, updateUrl) {
     const targetPage = document.getElementById("tab-" + tabName);
