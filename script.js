@@ -30,6 +30,11 @@ const customFoodCount = document.getElementById("custom-food-count");
 const goToPlannerBtn = document.getElementById("go-to-planner");
 const goToDatabaseBtn = document.getElementById("go-to-database");
 
+// Food database elements
+const foodCount = document.getElementById("food-count");
+const dietFilterButtons = document.querySelectorAll(".diet-filter-btn");
+let selectedDietFilter = "all";
+
 
 function switchTab(tabName, updateUrl) {
     const targetPage = document.getElementById("tab-" + tabName);
@@ -152,19 +157,32 @@ function filterByDiet(foods, preference) {
         return foods.filter(function (food) {
             return food.dietType === "veg";
         });
+    } else if (preference === "non-veg") {
+        return foods.filter(function (food) {
+            return food.dietType === "non-veg";
+        });
     }
-    return foods; // "non-veg" or "both" -> no exclusion
+    return foods; // default: return all foods
 }
 
 function renderFilteredFoods() {
     const searchTerm = foodSearchInput.value.toLowerCase().trim();
     const filteredResults = foodData.filter(function (food) {
-        const matchesSearch = food.name.toLowerCase().includes(searchTerm);
+        const matchesSearch = !searchTerm || food.name.toLowerCase().includes(searchTerm);
         const matchesDiet = selectedDietFilter === "all" || food.dietType === selectedDietFilter;
         return matchesSearch && matchesDiet;
     });
 
     displayFoods(filteredResults);
+}
+
+// Debounce search input for better performance
+let searchDebounceTimer;
+function setupSearchDebounce() {
+    foodSearchInput.addEventListener("input", function () {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(renderFilteredFoods, 300);
+    });
 }
 
 function calculateNutrition(food, quantityInGrams) {
@@ -504,7 +522,8 @@ async function loadFoodData() {
         });
         foodData = builtInFoods.concat(getCustomFoods());
 
-        displayFoods(foodData);
+        // Display all foods with filters applied
+        renderFilteredFoods();
         displayCustomFoods();
         document.getElementById("stat-food-count").textContent = foodData.length;
     } catch (error) {
@@ -572,7 +591,7 @@ foodForm.addEventListener("submit", function (event) {
     saveCustomFoods(customFoods);
     foodData.push(customFood);
     displayCustomFoods();
-    displayFoods(foodData);
+    renderFilteredFoods();
     document.getElementById("stat-food-count").textContent = foodData.length;
     foodForm.reset();
     foodFormMessage.textContent = customFood.name + " was added to the database.";
@@ -602,11 +621,11 @@ customFoodsContainer.addEventListener("click", function (event) {
         return String(food.id) !== foodId;
     });
     displayCustomFoods();
-    displayFoods(foodData);
+    renderFilteredFoods();
     document.getElementById("stat-food-count").textContent = foodData.length;
 });
 
-foodSearchInput.addEventListener("input", renderFilteredFoods);
+setupSearchDebounce();
 
 dietFilterButtons.forEach(function (button) {
     button.addEventListener("click", function () {
