@@ -11,8 +11,6 @@ const dailyTotals = document.getElementById("daily-totals");
 const MINIMUM_MATCH_SCORE = 70;
 const navTabs = document.querySelectorAll(".nav-tab");
 const tabPages = document.querySelectorAll(".tab-page");
-
-// Login page elements
 const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const roleOptions = document.querySelectorAll(".role-option");
@@ -291,6 +289,10 @@ function calculateNutrition(food, quantityInGrams) {
 function getServingSizes(food) {
     const name = food.name.toLowerCase();
 
+    if (name.includes("psyllium")) {
+        return [5, 10, 15, 20];
+    }
+
     if (food.category === "Protein") {
         if (name.includes("egg")) {
             return [50, 100, 150, 200];
@@ -332,6 +334,17 @@ function getServingSizes(food) {
     }
 
     return [50, 100, 150, 200];
+}
+
+function getSearchServingSizes(food) {
+    const servingSizes = getServingSizes(food);
+    const candidateIndexes = [0, Math.floor((servingSizes.length - 1) / 2), servingSizes.length - 1];
+
+    return candidateIndexes.filter(function (index, position, indexes) {
+        return indexes.indexOf(index) === position;
+    }).map(function (index) {
+        return servingSizes[index];
+    });
 }
 
 function generateCombinations(foods) {
@@ -900,6 +913,14 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
     const vegetables = foods.filter(function (food) {
         return food.category === "Vegetable";
     }).slice(0, 4);
+    const fiberSources = foodData.filter(function (food) {
+        const name = food.name.toLowerCase();
+        return name.includes("lentil") || name.includes("bean") || name.includes("chickpea") ||
+            name.includes("dal") || name.includes("oat") || name.includes("whole wheat") ||
+            name.includes("barley") || name.includes("seed") || food.category === "Vegetable";
+    }).sort(function (firstFood, secondFood) {
+        return getFiberPer100g(secondFood) - getFiberPer100g(firstFood);
+    }).slice(0, 4);
     const suggestions = [];
 
     function addSuggestion(items) {
@@ -919,25 +940,31 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
     }
 
     proteins.forEach(function (protein) {
-    carbs.forEach(function (carb) {
+        carbs.forEach(function (carb) {
             fats.forEach(function (fat) {
                 vegetables.forEach(function (vegetable) {
-                    if ([protein, carb, fat].some(function (food) {
-                        return String(food.id) === String(vegetable.id);
-                    })) {
-                        return;
-                    }
+                    fiberSources.forEach(function (fiberSource) {
+                        const usedFoods = [protein, carb, fat, vegetable];
+                        if (usedFoods.some(function (food) {
+                            return String(food.id) === String(fiberSource.id);
+                        })) {
+                            return;
+                        }
 
-                    getServingSizes(protein).forEach(function (proteinQuantity) {
-                        getServingSizes(carb).forEach(function (carbQuantity) {
-                            getServingSizes(fat).forEach(function (fatQuantity) {
-                                getServingSizes(vegetable).slice(0, 4).forEach(function (vegetableQuantity) {
-                            addSuggestion([
-                                { food: protein, quantity: proteinQuantity },
-                                { food: carb, quantity: carbQuantity },
-                                { food: fat, quantity: fatQuantity },
-                                { food: vegetable, quantity: vegetableQuantity }
-                            ]);
+                        getSearchServingSizes(protein).forEach(function (proteinQuantity) {
+                            getSearchServingSizes(carb).forEach(function (carbQuantity) {
+                                getSearchServingSizes(fat).forEach(function (fatQuantity) {
+                                    getSearchServingSizes(vegetable).forEach(function (vegetableQuantity) {
+                                        getSearchServingSizes(fiberSource).forEach(function (fiberQuantity) {
+                                            addSuggestion([
+                                                { food: protein, quantity: proteinQuantity },
+                                                { food: carb, quantity: carbQuantity },
+                                                { food: fat, quantity: fatQuantity },
+                                                { food: vegetable, quantity: vegetableQuantity },
+                                                { food: fiberSource, quantity: fiberQuantity }
+                                            ]);
+                                        });
+                                    });
                                 });
                             });
                         });
@@ -964,11 +991,11 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
                             return;
                         }
 
-                        getServingSizes(protein).forEach(function (proteinQuantity) {
-                            getServingSizes(firstCarb).forEach(function (firstCarbQuantity) {
-                                getServingSizes(secondCarb).forEach(function (secondCarbQuantity) {
-                                    getServingSizes(fat).forEach(function (fatQuantity) {
-                                        getServingSizes(vegetable).slice(0, 4).forEach(function (vegetableQuantity) {
+                        getSearchServingSizes(protein).forEach(function (proteinQuantity) {
+                            getSearchServingSizes(firstCarb).forEach(function (firstCarbQuantity) {
+                                getSearchServingSizes(secondCarb).forEach(function (secondCarbQuantity) {
+                                    getSearchServingSizes(fat).forEach(function (fatQuantity) {
+                                        getSearchServingSizes(vegetable).forEach(function (vegetableQuantity) {
                                             addSuggestion([
                                                 { food: protein, quantity: proteinQuantity },
                                                 { food: firstCarb, quantity: firstCarbQuantity },
