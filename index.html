@@ -16,7 +16,7 @@
     
     <div id="login-page" class="login-page">
         <div class="login-panel">
-            <div class="login-brand">🍗 <span>MacroMeal</span></div>
+            <div class="login-brand">🍗<span>MacroMeal</span></div>
             <p class="eyebrow">Macro nutrition planner</p>
             <h1>Welcome </h1>
             <p class="login-intro">Choose your workspace to continue.</p>
@@ -166,7 +166,10 @@
                 <div class="database-heading">
                     <div>
                         <span class="section-kicker">EXPLORE YOUR OPTIONS</span>
-                        <h2>Food Database</h2>
+                        <div class="database-title-row">
+                            <span class="database-title-icon" aria-hidden="true">✦</span>
+                            <h2>Food Database</h2>
+                        </div>
                         <p class="database-intro">Browse nutrition per 100g and find ingredients that fit your plan.</p>
                     </div>
                     <span class="food-count" id="food-count">0 foods</span>
@@ -175,12 +178,48 @@
                     <span><span class="context-dot"></span>Nutrition snapshot</span>
                     <span>Values shown per 100g</span>
                 </div>
-                <label class="search-label" for="food-search">Search by food name</label>
-                <input type="text" id="food-search" placeholder="Try chicken, rice, almonds...">
-                <div class="diet-filter" role="group" aria-label="Filter foods by diet">
-                    <button type="button" class="diet-filter-btn active" data-diet-filter="all">All foods</button>
-                    <button type="button" class="diet-filter-btn" data-diet-filter="veg">Vegetarian</button>
-                    <button type="button" class="diet-filter-btn" data-diet-filter="non-veg">Non-vegetarian</button>
+                <div class="database-stats" aria-label="Food database summary">
+                    <div class="database-stat database-stat-total">
+                        <span class="database-stat-icon" aria-hidden="true">◈</span>
+                        <span><strong id="database-total-count">0</strong><small>Total foods</small></span>
+                    </div>
+                    <div class="database-stat database-stat-veg">
+                        <span class="database-stat-icon" aria-hidden="true">●</span>
+                        <span><strong id="database-veg-count">0</strong><small>Vegetarian</small></span>
+                    </div>
+                    <div class="database-stat database-stat-nonveg">
+                        <span class="database-stat-icon" aria-hidden="true">◆</span>
+                        <span><strong id="database-nonveg-count">0</strong><small>Non-vegetarian</small></span>
+                    </div>
+                </div>
+                <div class="database-toolbar">
+                    <div class="database-search">
+                        <label class="search-label" for="food-search">Find an ingredient</label>
+                        <div class="search-input-wrap">
+                            <span aria-hidden="true">⌕</span>
+                            <input type="text" id="food-search" placeholder="Search foods, ingredients, or meals...">
+                        </div>
+                    </div>
+                    <div class="database-filters">
+                        <div class="diet-filter" role="group" aria-label="Filter foods by diet">
+                            <span class="filter-label">Diet</span>
+                            <button type="button" class="diet-filter-btn active" data-diet-filter="all">All foods</button>
+                            <button type="button" class="diet-filter-btn" data-diet-filter="veg"><span aria-hidden="true">●</span> Vegetarian</button>
+                            <button type="button" class="diet-filter-btn" data-diet-filter="non-veg"><span aria-hidden="true">◆</span> Non-vegetarian</button>
+                        </div>
+                        <div class="category-filter">
+                            <label class="filter-label" for="category-filter">Category</label>
+                            <select id="category-filter">
+                                <option value="all">All categories</option>
+                                <option value="Protein">Protein</option>
+                                <option value="Carbs">Carbs</option>
+                                <option value="Fat">Fat</option>
+                                <option value="Dairy">Dairy</option>
+                                <option value="Vegetable">Vegetable</option>
+                            </select>
+                        </div>
+                        <button type="button" id="clear-food-filters" class="clear-food-filters">Clear filters</button>
+                    </div>
                 </div>
                 <div id="food-list-container"></div>
             </section>

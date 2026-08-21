@@ -32,8 +32,14 @@ const goToDatabaseBtn = document.getElementById("go-to-database");
 
 // Food database elements
 const foodCount = document.getElementById("food-count");
+const databaseTotalCount = document.getElementById("database-total-count");
+const databaseVegCount = document.getElementById("database-veg-count");
+const databaseNonVegCount = document.getElementById("database-nonveg-count");
 const dietFilterButtons = document.querySelectorAll(".diet-filter-btn");
+const categoryFilter = document.getElementById("category-filter");
+const clearFoodFiltersButton = document.getElementById("clear-food-filters");
 let selectedDietFilter = "all";
+let selectedCategoryFilter = "all";
 
 
 function switchTab(tabName, updateUrl) {
@@ -125,7 +131,13 @@ function displayFoods(foods) {
         foodCount.textContent = `${foods.length} ${foods.length === 1 ? "food" : "foods"}`;
 
         if (foods.length === 0) {
-                foodListContainer.innerHTML = '<p class="empty-foods">No foods match your search.</p>';
+                foodListContainer.innerHTML = `
+                    <div class="empty-foods">
+                        <span class="empty-foods-icon" aria-hidden="true">⌕</span>
+                        <strong>No foods found</strong>
+                        <p>Try another search or clear the active filters.</p>
+                        <button type="button" class="empty-foods-reset">Clear filters</button>
+                    </div>`;
                 return;
         }
 
@@ -133,17 +145,33 @@ function displayFoods(foods) {
         const foodItem = document.createElement("div");
         foodItem.classList.add("food-item");
 
+        const proteinCalories = Number(food.proteinPer100g) * 4;
+        const carbsCalories = Number(food.carbsPer100g) * 4;
+        const fatCalories = Number(food.fatPer100g) * 9;
+        const totalMacroCalories = proteinCalories + carbsCalories + fatCalories || 1;
+        const proteinShare = (proteinCalories / totalMacroCalories) * 100;
+        const carbsShare = (carbsCalories / totalMacroCalories) * 100;
+        const fatShare = (fatCalories / totalMacroCalories) * 100;
+
         foodItem.innerHTML = `
             <div class="food-item-topline">
                 <span class="food-category">${food.category}</span>
-                <span class="food-diet">${food.dietType === "veg" ? "Vegetarian" : "Non-veg"}</span>
+                <span class="food-diet ${food.dietType === "veg" ? "food-diet-veg" : "food-diet-non-veg"}">
+                    <span aria-hidden="true">${food.dietType === "veg" ? "●" : "◆"}</span>
+                    ${food.dietType === "veg" ? "Vegetarian" : "Non-veg"}
+                </span>
             </div>
             <strong>${food.name}</strong>
             <div class="food-calories">${food.caloriesPer100g} kcal <span>per 100g</span></div>
             <div class="food-macros">
-                <span><b>${food.proteinPer100g}g</b> protein</span>
-                <span><b>${food.carbsPer100g}g</b> carbs</span>
-                <span><b>${food.fatPer100g}g</b> fat</span>
+                <span><b>${food.proteinPer100g}g</b><small>Protein</small></span>
+                <span><b>${food.carbsPer100g}g</b><small>Carbs</small></span>
+                <span><b>${food.fatPer100g}g</b><small>Fat</small></span>
+            </div>
+            <div class="macro-distribution" aria-label="Macro calorie distribution">
+                <span class="macro-bar macro-bar-protein" style="width: ${proteinShare}%"></span>
+                <span class="macro-bar macro-bar-carbs" style="width: ${carbsShare}%"></span>
+                <span class="macro-bar macro-bar-fat" style="width: ${fatShare}%"></span>
             </div>
     `;
 
@@ -159,7 +187,7 @@ function filterByDiet(foods, preference) {
         });
     } else if (preference === "non-veg") {
         return foods.filter(function (food) {
-            return food.dietType === "non-veg";
+            return food.dietType === "non-veg" || (food.category !== "Protein" && food.category !== "Vegetable");
         });
     }
     return foods; // default: return all foods
@@ -170,10 +198,21 @@ function renderFilteredFoods() {
     const filteredResults = foodData.filter(function (food) {
         const matchesSearch = !searchTerm || food.name.toLowerCase().includes(searchTerm);
         const matchesDiet = selectedDietFilter === "all" || food.dietType === selectedDietFilter;
-        return matchesSearch && matchesDiet;
+        const matchesCategory = selectedCategoryFilter === "all" || food.category === selectedCategoryFilter;
+        return matchesSearch && matchesDiet && matchesCategory;
     });
 
     displayFoods(filteredResults);
+}
+
+function updateDatabaseStats() {
+    databaseTotalCount.textContent = foodData.length;
+    databaseVegCount.textContent = foodData.filter(function (food) {
+        return food.dietType === "veg";
+    }).length;
+    databaseNonVegCount.textContent = foodData.filter(function (food) {
+        return food.dietType === "non-veg";
+    }).length;
 }
 
 // Debounce search input for better performance
@@ -523,6 +562,7 @@ async function loadFoodData() {
         foodData = builtInFoods.concat(getCustomFoods());
 
         // Display all foods with filters applied
+        updateDatabaseStats();
         renderFilteredFoods();
         displayCustomFoods();
         document.getElementById("stat-food-count").textContent = foodData.length;
@@ -590,6 +630,7 @@ foodForm.addEventListener("submit", function (event) {
     customFoods.push(customFood);
     saveCustomFoods(customFoods);
     foodData.push(customFood);
+    updateDatabaseStats();
     displayCustomFoods();
     renderFilteredFoods();
     document.getElementById("stat-food-count").textContent = foodData.length;
@@ -620,6 +661,7 @@ customFoodsContainer.addEventListener("click", function (event) {
     foodData = foodData.filter(function (food) {
         return String(food.id) !== foodId;
     });
+    updateDatabaseStats();
     displayCustomFoods();
     renderFilteredFoods();
     document.getElementById("stat-food-count").textContent = foodData.length;
@@ -731,4 +773,28 @@ document.getElementById("go-to-database").addEventListener("click", function () 
 });
 document.querySelector(".nav-logo").addEventListener("click", function () {
   switchTab("home");
+});
+
+categoryFilter.addEventListener("change", function () {
+    selectedCategoryFilter = categoryFilter.value;
+    renderFilteredFoods();
+});
+
+function clearFoodFilters() {
+    foodSearchInput.value = "";
+    selectedDietFilter = "all";
+    selectedCategoryFilter = "all";
+    categoryFilter.value = "all";
+    dietFilterButtons.forEach(function (filterButton) {
+        filterButton.classList.toggle("active", filterButton.dataset.dietFilter === "all");
+    });
+    renderFilteredFoods();
+}
+
+clearFoodFiltersButton.addEventListener("click", clearFoodFilters);
+
+foodListContainer.addEventListener("click", function (event) {
+    if (event.target.classList.contains("empty-foods-reset")) {
+        clearFoodFilters();
+    }
 });
