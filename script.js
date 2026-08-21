@@ -34,6 +34,9 @@ const goToDatabaseBtn = document.getElementById("go-to-database");
 const foodCount = document.getElementById("food-count");
 const dietFilterButtons = document.querySelectorAll(".diet-filter-btn");
 let selectedDietFilter = "all";
+const requirementsForm = document.getElementById("requirements-form");
+const requirementsError = document.getElementById("requirements-error");
+const requirementsResult = document.getElementById("requirements-result");
 
 
 function switchTab(tabName, updateUrl) {
@@ -731,4 +734,51 @@ document.getElementById("go-to-database").addEventListener("click", function () 
 });
 document.querySelector(".nav-logo").addEventListener("click", function () {
   switchTab("home");
+});
+
+requirementsForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    requirementsError.textContent = "";
+
+    const weight = Number(document.getElementById("body-weight").value);
+    const height = Number(document.getElementById("body-height").value);
+    const age = Number(document.getElementById("body-age").value);
+    const sex = document.getElementById("body-sex").value;
+    const activity = Number(document.getElementById("activity-level").value);
+    const goal = document.getElementById("body-goal").value;
+
+    if (!weight || !height || !age || weight <= 0 || height <= 0 || age <= 0) {
+        requirementsError.textContent = "Enter valid body details to calculate targets.";
+        requirementsResult.hidden = true;
+        return;
+    }
+
+    const bmr = (10 * weight) + (6.25 * height) - (5 * age) + (sex === "male" ? 5 : -161);
+    const maintenanceCalories = bmr * activity;
+    const goalAdjustment = goal === "lose" ? 0.8 : goal === "gain" ? 1.1 : 1;
+    const calories = Math.round(maintenanceCalories * goalAdjustment);
+    const protein = Math.round(weight * (goal === "gain" ? 1.8 : 1.6));
+    const fat = Math.round((calories * 0.3) / 9);
+    const carbs = Math.max(1, Math.round((calories - (protein * 4) - (fat * 9)) / 4));
+    const bmi = weight / Math.pow(height / 100, 2);
+
+    requirementsResult.innerHTML = `
+        <div class="requirement-total">${calories} <span>kcal / day</span></div>
+        <div class="requirement-stats">
+            <div class="requirement-stat"><strong>${protein}g</strong><span>Protein</span></div>
+            <div class="requirement-stat"><strong>${carbs}g</strong><span>Carbs</span></div>
+            <div class="requirement-stat"><strong>${fat}g</strong><span>Fat</span></div>
+        </div>
+        <p class="section-description">BMR ${Math.round(bmr)} kcal · Maintenance ${Math.round(maintenanceCalories)} kcal · BMI ${bmi.toFixed(1)}</p>
+        <button type="button" class="use-targets-btn">Use These Targets</button>
+    `;
+    requirementsResult.hidden = false;
+
+    requirementsResult.querySelector(".use-targets-btn").addEventListener("click", function () {
+        document.getElementById("calories").value = calories;
+        document.getElementById("protein").value = protein;
+        document.getElementById("carbs").value = carbs;
+        document.getElementById("fat").value = fat;
+        document.getElementById("macro-form-section").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 });

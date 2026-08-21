@@ -113,9 +113,10 @@
     <!-- ============ MEAL PLANNER TAB ============ -->
     <div class="tab-page app-shell" id="tab-planner">
         <main>
-            <section id="macro-form-section">
-                <h2>Set Your Targets</h2>
-                <form id="macro-form">
+            <div class="planner-layout">
+                <section id="macro-form-section">
+                    <h2>Set Your Targets</h2>
+                    <form id="macro-form">
                     <div class="form-group">
                         <label for="calories">Calories (kcal)</label>
                         <input type="number" id="calories" name="calories" min="0" placeholder="e.g. 500">
@@ -144,18 +145,73 @@
                         </div>
                     </div>
 
-                    <button type="submit">Find Meals</button>
-                </form>
-                <p id="form-error" class="error-message"></p>
-                <div id="consistency-warning" class="warning-message" style="display: none;"></div>
-            </section>
+                        <button type="submit">Find Meals</button>
+                    </form>
+                    <p id="form-error" class="error-message"></p>
+                    <div id="consistency-warning" class="warning-message" style="display: none;"></div>
+                </section>
+
+                <aside class="requirements-card" aria-labelledby="requirements-title">
+                    <div class="requirements-heading">
+                        <div>
+                            <span class="section-kicker">PERSONALIZE YOUR PLAN</span>
+                            <h2 id="requirements-title">Calculate Requirements</h2>
+                        </div>
+                        <span class="requirements-icon" aria-hidden="true">◌</span>
+                    </div>
+                    <p class="requirements-intro">Use your body stats to estimate daily calories and macros.</p>
+                    <form id="requirements-form">
+                        <div class="requirements-grid">
+                            <div class="form-group">
+                                <label for="body-weight">Weight (kg)</label>
+                                <input type="number" id="body-weight" min="20" max="400" step="0.1" placeholder="e.g. 70" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="body-height">Height (cm)</label>
+                                <input type="number" id="body-height" min="100" max="250" step="0.1" placeholder="e.g. 175" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="body-age">Age</label>
+                                <input type="number" id="body-age" min="13" max="100" placeholder="e.g. 30" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="body-sex">Sex</label>
+                                <select id="body-sex">
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="activity-level">Activity level</label>
+                            <select id="activity-level">
+                                <option value="1.2">Sedentary</option>
+                                <option value="1.375">Lightly active</option>
+                                <option value="1.55" selected>Moderately active</option>
+                                <option value="1.725">Very active</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="body-goal">Goal</label>
+                            <select id="body-goal">
+                                <option value="lose">Lose weight</option>
+                                <option value="maintain" selected>Maintain weight</option>
+                                <option value="gain">Gain weight</option>
+                            </select>
+                        </div>
+                        <button type="submit">Calculate targets</button>
+                    </form>
+                    <p id="requirements-error" class="error-message" role="alert"></p>
+                    <div id="requirements-result" class="requirements-result" aria-live="polite" hidden></div>
+                </aside>
+            </div>
 
             <section id="results-section">
-                <h2>Meal Suggestions</h2>
-                <div id="results-container">
-                    <p id="results-placeholder">No results yet. Enter your targets above.</p>
-                </div>
-            </section>
+                    <h2>Meal Suggestions</h2>
+                    <div id="results-container">
+                        <p id="results-placeholder">No results yet. Enter your targets above.</p>
+                    </div>
+                </section>
         </main>
     </div>
 
