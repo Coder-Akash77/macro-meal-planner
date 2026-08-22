@@ -59,10 +59,16 @@ body {
 }
 
 .login-brand {
-  color: var(--primary-dark);
-  font-size: 1.1rem;
-  font-weight: 700;
+  display: flex;
+  justify-content: center;
   margin-bottom: 28px;
+}
+
+.login-brand img {
+  display: block;
+  width: min(100%, 230px);
+  height: 150px;
+  object-fit: contain;
 }
 
 .eyebrow {
@@ -174,6 +180,13 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.nav-logo img {
+  display: block;
+  width: 174px;
+  height: 58px;
+  object-fit: contain;
 }
 
 .nav-logo {
