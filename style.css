@@ -389,136 +389,9 @@ body {
 
 /* ===== Layout (inner tabs) ===== */
 main {
-  max-width: 1120px;
+  max-width: 720px;
   margin: 32px auto;
   padding: 0 16px 40px;
-}
-
-.planner-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.8fr);
-  align-items: start;
-  gap: 20px;
-}
-
-.planner-layout section {
-  margin-bottom: 0;
-}
-
-.requirements-card {
-  position: sticky;
-  top: 92px;
-  padding: 22px;
-  border: 1px solid #ccebd7;
-  background: linear-gradient(155deg, #ffffff 0%, #f4fbf6 100%);
-}
-
-.requirements-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.requirements-heading h2 {
-  margin-bottom: 0;
-}
-
-.requirements-icon {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--accent-light);
-  color: var(--primary-dark);
-  font-size: 1.4rem;
-  line-height: 1;
-}
-
-.requirements-intro {
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  line-height: 1.5;
-  margin: -7px 0 18px;
-}
-
-.requirements-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 12px;
-}
-
-.requirements-card .form-group {
-  margin-bottom: 12px;
-}
-
-.requirements-card .form-group label {
-  font-size: 0.76rem;
-}
-
-.requirements-card .form-group input,
-.requirements-card .form-group select {
-  padding: 9px 10px;
-  font-size: 0.82rem;
-}
-
-.requirements-result {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid #ccebd7;
-  font-size: 0.78rem;
-}
-
-.requirements-result[hidden] {
-  display: none;
-}
-
-.requirement-total {
-  color: var(--primary-dark);
-  font-size: 1.35rem;
-  font-weight: 700;
-}
-
-.requirement-total span {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 500;
-}
-
-.requirement-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin: 10px 0 14px;
-}
-
-.requirement-stat {
-  padding: 8px 6px;
-  border-radius: var(--radius-sm);
-  background: white;
-  text-align: center;
-}
-
-.requirement-stat strong,
-.requirement-stat span {
-  display: block;
-}
-
-.requirement-stat strong {
-  color: var(--text-main);
-  font-size: 0.85rem;
-}
-
-.requirement-stat span {
-  color: var(--text-muted);
-  font-size: 0.65rem;
-}
-
-.use-targets-btn {
-  margin-top: 0 !important;
-  padding: 10px 14px !important;
-  font-size: 0.82rem !important;
 }
 
 section {
@@ -621,16 +494,6 @@ button[type="submit"]:hover {
 
 button[type="submit"]:active {
   transform: scale(0.98);
-}
-
-@media (max-width: 780px) {
-  .planner-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .requirements-card {
-    position: static;
-  }
 }
 
 .error-message {
