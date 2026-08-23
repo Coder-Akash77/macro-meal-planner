@@ -184,8 +184,8 @@ body {
 
 .nav-logo img {
   display: block;
-  width: 174px;
-  height: 58px;
+  width: 200px;
+  height: 100px;
   object-fit: contain;
 }
 
@@ -641,6 +641,25 @@ body {
 }
 
 /* ===== Hero ===== */
+#tab-home .hero,
+#tab-home .feature-cards {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+#tab-home {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f7f5 58%, #eafaf1 100%);
+}
+
+#tab-home .hero {
+  min-height: 0;
+  padding: clamp(56px, 10vh, 104px) clamp(24px, 6vw, 96px) 72px;
+}
+
 .hero {
   max-width: 1100px;
   margin: 0 auto;
