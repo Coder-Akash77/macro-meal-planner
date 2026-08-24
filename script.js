@@ -56,12 +56,12 @@ function switchTab(tabName, updateUrl) {
         return;
     }
 
-  tabPages.forEach(function (page) {
-    page.classList.remove("active");
-  });
-  navTabs.forEach(function (tab) {
-    tab.classList.remove("active");
-  });
+    tabPages.forEach(function (page) {
+        page.classList.remove("active");
+    });
+    navTabs.forEach(function (tab) {
+        tab.classList.remove("active");
+    });
 
     targetPage.classList.add("active");
     targetTab.classList.add("active");
@@ -136,18 +136,18 @@ function displayCustomFoods() {
 // Render the food list on the page
 function displayFoods(foods) {
     foodListContainer.innerHTML = ""; // clear previous content
-        foodCount.textContent = `${foods.length} ${foods.length === 1 ? "food" : "foods"}`;
+    foodCount.textContent = `${foods.length} ${foods.length === 1 ? "food" : "foods"}`;
 
-        if (foods.length === 0) {
-                foodListContainer.innerHTML = `
+    if (foods.length === 0) {
+        foodListContainer.innerHTML = `
                     <div class="empty-foods">
                         <span class="empty-foods-icon" aria-hidden="true">⌕</span>
                         <strong>No foods found</strong>
                         <p>Try another search or clear the active filters.</p>
                         <button type="button" class="empty-foods-reset">Clear filters</button>
                     </div>`;
-                return;
-        }
+        return;
+    }
 
     foods.forEach(function (food) {
         const foodItem = document.createElement("div");
@@ -844,10 +844,16 @@ macroForm.addEventListener("submit", function (event) {
 
     const macroCalories = protein * 4 + carbs * 4 + fat * 9;
 
-    if (macroCalories > calories) {
+    // Allow a reasonable difference between calorie target
+    // and calories calculated from protein/carbs/fat.
+    const calorieDifferencePercent =
+        Math.abs(macroCalories - calories) / calories * 100;
+
+    if (calorieDifferencePercent > 20) {
         consistencyWarning.style.display = "block";
         consistencyWarning.textContent =
-            `Your macro targets total ${macroCalories.toFixed(0)} kcal, which exceeds your calorie target of ${calories} kcal. Please adjust your targets.`;
+            `Your calorie target (${calories} kcal) does not match your macro targets (${macroCalories.toFixed(0)} kcal). ` +
+            `Please adjust your calories or protein, carbs, and fat targets so they are reasonably consistent.`;
         return;
     } else {
         consistencyWarning.style.display = "none";
@@ -872,11 +878,11 @@ dailyLogContainer.addEventListener("click", function (event) {
 });
 
 document.getElementById("go-to-planner").addEventListener("click", function () {
-  switchTab("planner");
+    switchTab("planner");
 });
 
 document.getElementById("go-to-database").addEventListener("click", function () {
-  switchTab("database");
+    switchTab("database");
 });
 
 function getCalculatorMealFoods(dietPreference) {
@@ -889,9 +895,9 @@ function getCalculatorMealFoods(dietPreference) {
         return food.category === "Fat";
     }).slice(0, 4), eligibleFoods.filter(function (food) {
         return food.category === "Dairy";
-        }).slice(0, 2), eligibleFoods.filter(function (food) {
-            return food.category === "Vegetable";
-        }).slice(0, 4));
+    }).slice(0, 2), eligibleFoods.filter(function (food) {
+        return food.category === "Vegetable";
+    }).slice(0, 4));
 
     return preferredFoods.filter(function (food, index, foods) {
         return foods.findIndex(function (candidate) {
@@ -987,30 +993,31 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
         proteins.slice(0, 3).forEach(function (protein) {
             carbs.slice(0, 4).forEach(function (firstCarb, firstCarbIndex) {
                 carbs.slice(0, 4).forEach(function (secondCarb, secondCarbIndex) {
-                if (firstCarbIndex >= secondCarbIndex) {
-                    return;
-                }
+                    if (firstCarbIndex >= secondCarbIndex) {
+                        return;
+                    }
 
-                fats.slice(0, 3).forEach(function (fat) {
-                    vegetables.slice(0, 3).forEach(function (vegetable) {
-                        if ([protein, firstCarb, secondCarb, fat].some(function (food) {
-                            return String(food.id) === String(vegetable.id);
-                        })) {
-                            return;
-                        }
+                    fats.slice(0, 3).forEach(function (fat) {
+                        vegetables.slice(0, 3).forEach(function (vegetable) {
+                            if ([protein, firstCarb, secondCarb, fat].some(function (food) {
+                                return String(food.id) === String(vegetable.id);
+                            })) {
+                                return;
+                            }
 
-                        getSearchServingSizes(protein).forEach(function (proteinQuantity) {
-                            getSearchServingSizes(firstCarb).forEach(function (firstCarbQuantity) {
-                                getSearchServingSizes(secondCarb).forEach(function (secondCarbQuantity) {
-                                    getSearchServingSizes(fat).forEach(function (fatQuantity) {
-                                        getSearchServingSizes(vegetable).forEach(function (vegetableQuantity) {
-                                            addSuggestion([
-                                                { food: protein, quantity: proteinQuantity },
-                                                { food: firstCarb, quantity: firstCarbQuantity },
-                                                { food: secondCarb, quantity: secondCarbQuantity },
-                                                { food: fat, quantity: fatQuantity },
-                                                { food: vegetable, quantity: vegetableQuantity }
-                                            ]);
+                            getSearchServingSizes(protein).forEach(function (proteinQuantity) {
+                                getSearchServingSizes(firstCarb).forEach(function (firstCarbQuantity) {
+                                    getSearchServingSizes(secondCarb).forEach(function (secondCarbQuantity) {
+                                        getSearchServingSizes(fat).forEach(function (fatQuantity) {
+                                            getSearchServingSizes(vegetable).forEach(function (vegetableQuantity) {
+                                                addSuggestion([
+                                                    { food: protein, quantity: proteinQuantity },
+                                                    { food: firstCarb, quantity: firstCarbQuantity },
+                                                    { food: secondCarb, quantity: secondCarbQuantity },
+                                                    { food: fat, quantity: fatQuantity },
+                                                    { food: vegetable, quantity: vegetableQuantity }
+                                                ]);
+                                            });
                                         });
                                     });
                                 });
@@ -1020,7 +1027,6 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
                 });
             });
         });
-    });
     }
 
     suggestions.sort(function (a, b) {
@@ -1214,7 +1220,7 @@ calorieForm.addEventListener("submit", function (event) {
 });
 
 document.querySelector(".nav-logo").addEventListener("click", function () {
-  switchTab("home");
+    switchTab("home");
 });
 
 categoryFilter.addEventListener("change", function () {
