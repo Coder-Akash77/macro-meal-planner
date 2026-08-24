@@ -14,6 +14,14 @@ const navTabs = document.querySelectorAll(".nav-tab");
 const tabPages = document.querySelectorAll(".tab-page");
 const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
+
+const signupForm = document.getElementById("signup-form");
+const signupError = document.getElementById("signup-error");
+const showSignupBtn = document.getElementById("show-signup");
+const showLoginBtn = document.getElementById("show-login");
+
+const USERS_KEY = "macro-meal-users";
+
 const roleOptions = document.querySelectorAll(".role-option");
 const selectedRoleLabel = document.getElementById("selected-role-label");
 const adminNavTab = document.querySelector('.nav-tab[data-tab="admin"]');
@@ -696,13 +704,24 @@ displayCustomFoods();
 roleOptions.forEach(function (option) {
     option.addEventListener("click", function () {
         selectedRole = option.dataset.role;
+
         roleOptions.forEach(function (roleOption) {
             roleOption.classList.toggle("active", roleOption === option);
         });
-        selectedRoleLabel.textContent = selectedRole === "admin" ? "Admin" : "User";
+
+        selectedRoleLabel.textContent =
+            selectedRole === "admin" ? "Admin" : "User";
+
         loginError.textContent = "";
+
+        if (selectedRole === "admin") {
+            document.getElementById("show-signup").style.display = "none";
+        } else {
+            document.getElementById("show-signup").style.display = "inline";
+        }
     });
 });
+
 
 function showApp(role) {
     document.getElementById("login-page").classList.add("hidden");
@@ -718,29 +737,106 @@ function showApp(role) {
     switchTab(role === "admin" ? "admin" : "home");
 }
 
+function getUsers() {
+    const storedUsers = localStorage.getItem(USERS_KEY);
+    return storedUsers ? JSON.parse(storedUsers) : [];
+}
+
+function saveUsers(users) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+showSignupBtn.addEventListener("click", function () {
+    document.getElementById("login-view").style.display = "none";
+    document.getElementById("signup-view").style.display = "block";
+});
+
+showLoginBtn.addEventListener("click", function () {
+    document.getElementById("signup-view").style.display = "none";
+    document.getElementById("login-view").style.display = "block";
+    signupError.textContent = "";
+});
+
+signupForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const username = document.getElementById("signup-username").value.trim();
+    const password = document.getElementById("signup-password").value;
+    const confirmPassword = document.getElementById("signup-confirm-password").value;
+
+    signupError.textContent = "";
+
+    if (password !== confirmPassword) {
+        signupError.textContent = "Passwords do not match.";
+        if (username.length < 3) { signupError.textContent = "Username must be at least 3 characters."; return; }
+if (password.length < 4) { signupError.textContent = "Password must be at least 4 characters."; return; }
+        return;
+    }
+
+    const users = getUsers();
+
+    const existingUser = users.find(function (user) {
+        return user.username.toLowerCase() === username.toLowerCase();
+    });
+
+    if (existingUser) {
+        signupError.textContent = "Username already exists.";
+        return;
+    }
+
+    users.push({
+        username: username,
+        password: password,
+        role: "user"
+    });
+
+    saveUsers(users);
+
+    alert("Account created successfully. You can now log in.");
+
+    signupForm.reset();
+
+    document.getElementById("signup-view").classList.add("hidden");
+    document.getElementById("login-view").classList.remove("hidden");
+});
+
+
+
 loginForm.addEventListener("submit", function (event) {
     event.preventDefault();
     const username = document.getElementById("login-username").value.trim();
     const password = document.getElementById("login-password").value;
+
+    loginError.textContent = "";
 
     if (!username || !password) {
         loginError.textContent = "Enter your username and password.";
         return;
     }
 
-    if (selectedRole === "admin" && (username !== "admin" || password !== "admin123")) {
-        loginError.textContent = "Use the demo admin credentials shown below.";
+    if (selectedRole === "admin") {
+        if (username !== "admin" || password !== "admin123") {
+            loginError.textContent = "Use the demo admin credentials shown below.";
+            return;
+        }
+        localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "admin", username: "admin" }));
+        showApp("admin");
         return;
     }
 
-    localStorage.setItem(LOGIN_KEY, JSON.stringify({
-    loggedIn: true,
-    role: selectedRole
-}));
+    const users = getUsers();
+    const validUser = users.find(function (user) {
+        return user.username === username && user.password === password;
+    });
 
-showApp(selectedRole);
+    if (!validUser) {
+        loginError.textContent = "Invalid username or password.";
+        return;
+    }
+
+    localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "user", username: validUser.username }));
+    showApp("user");
 });
-
 
 const savedLogin = localStorage.getItem(LOGIN_KEY);
 
@@ -1421,3 +1517,7 @@ foodListContainer.addEventListener("click", function (event) {
     }
 });
 
+document.getElementById("test-logout-btn").addEventListener("click", function () {
+    localStorage.removeItem(LOGIN_KEY);
+    location.reload();
+});

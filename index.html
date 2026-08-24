@@ -25,20 +25,59 @@
                 <button type="button" class="role-option active" data-role="user">User</button>
                 <button type="button" class="role-option" data-role="admin">Admin</button>
             </div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="login-username">Username</label>
-                    <input type="text" id="login-username" autocomplete="username" required
-                        placeholder="Enter your username">
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" autocomplete="current-password" required
-                        placeholder="Enter your password">
-                </div>
-                <button type="submit">Continue as <span id="selected-role-label">User</span></button>
-                <p id="login-error" class="error-message" role="alert"></p>
-            </form>
+            <div id="login-view">
+    <form id="login-form">
+        <div class="form-group">
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" autocomplete="username" required
+                placeholder="Enter your username">
+        </div>
+
+        <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" autocomplete="current-password" required
+                placeholder="Enter your password">
+        </div>
+
+        <button type="submit">Continue as <span id="selected-role-label">User</span></button>
+        <p id="login-error" class="error-message" role="alert"></p>
+    </form>
+
+    <p class="auth-switch">
+        New user?
+        <button type="button" id="show-signup">Create an account</button>
+    </p>
+</div>
+
+<div id="signup-view" style="display: none;">
+    <form id="signup-form">
+        <div class="form-group">
+            <label for="signup-username">Username</label>
+            <input type="text" id="signup-username" required
+                placeholder="Choose a username">
+        </div>
+
+        <div class="form-group">
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" required
+                placeholder="Create a password">
+        </div>
+
+        <div class="form-group">
+            <label for="signup-confirm-password">Confirm Password</label>
+            <input type="password" id="signup-confirm-password" required
+                placeholder="Confirm your password">
+        </div>
+
+        <button type="submit">Create Account</button>
+        <p id="signup-error" class="error-message" role="alert"></p>
+    </form>
+
+    <p class="auth-switch">
+        Already have an account?
+        <button type="button" id="show-login">Back to Login</button>
+    </p>
+</div>
             <p class="login-note">Demo admin login: <strong>admin</strong> / <strong>admin123</strong></p>
         </div>
     </div>
@@ -54,6 +93,7 @@
             <button class="nav-tab admin-only" data-tab="admin">Admin</button>
             <button class="nav-tab" data-tab="favorites">Favorites</button>
             <button class="nav-tab" data-tab="log">Daily Log</button>
+            <button class="nav-tab" id="test-logout-btn" style="margin-left:auto;">Logout</button>
         </div>
     </nav>
 
