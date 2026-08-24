@@ -17,6 +17,9 @@ const loginError = document.getElementById("login-error");
 const roleOptions = document.querySelectorAll(".role-option");
 const selectedRoleLabel = document.getElementById("selected-role-label");
 const adminNavTab = document.querySelector('.nav-tab[data-tab="admin"]');
+
+const LOGIN_KEY = "macro-meal-login";
+
 let selectedRole = "user";
 
 // Admin form elements
@@ -701,6 +704,20 @@ roleOptions.forEach(function (option) {
     });
 });
 
+function showApp(role) {
+    document.getElementById("login-page").classList.add("hidden");
+
+    document.querySelectorAll(".app-shell").forEach(function (element) {
+        element.classList.add("visible");
+    });
+
+    adminNavTab.classList.toggle("visible", role === "admin");
+
+    selectedRole = role;
+
+    switchTab(role === "admin" ? "admin" : "home");
+}
+
 loginForm.addEventListener("submit", function (event) {
     event.preventDefault();
     const username = document.getElementById("login-username").value.trim();
@@ -716,13 +733,28 @@ loginForm.addEventListener("submit", function (event) {
         return;
     }
 
-    document.getElementById("login-page").classList.add("hidden");
-    document.querySelectorAll(".app-shell").forEach(function (element) {
-        element.classList.add("visible");
-    });
-    adminNavTab.classList.toggle("visible", selectedRole === "admin");
-    switchTab(selectedRole === "admin" ? "admin" : "home");
+    localStorage.setItem(LOGIN_KEY, JSON.stringify({
+    loggedIn: true,
+    role: selectedRole
+}));
+
+showApp(selectedRole);
 });
+
+
+const savedLogin = localStorage.getItem(LOGIN_KEY);
+
+if (savedLogin) {
+    try {
+        const loginData = JSON.parse(savedLogin);
+
+        if (loginData.loggedIn && loginData.role) {
+            showApp(loginData.role);
+        }
+    } catch (error) {
+        localStorage.removeItem(LOGIN_KEY);
+    }
+}
 
 foodForm.addEventListener("submit", function (event) {
     event.preventDefault();
