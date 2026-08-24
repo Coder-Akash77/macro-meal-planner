@@ -59,10 +59,16 @@ body {
 }
 
 .login-brand {
-  color: var(--primary-dark);
-  font-size: 1.1rem;
-  font-weight: 700;
+  display: flex;
+  justify-content: center;
   margin-bottom: 28px;
+}
+
+.login-brand img {
+  display: block;
+  width: min(100%, 230px);
+  height: 150px;
+  object-fit: contain;
 }
 
 .eyebrow {
@@ -174,6 +180,13 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.nav-logo img {
+  display: block;
+  width: 200px;
+  height: 100px;
+  object-fit: contain;
 }
 
 .nav-logo {
@@ -628,6 +641,25 @@ body {
 }
 
 /* ===== Hero ===== */
+#tab-home .hero,
+#tab-home .feature-cards {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+#tab-home {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f7f5 58%, #eafaf1 100%);
+}
+
+#tab-home .hero {
+  min-height: 0;
+  padding: clamp(56px, 10vh, 104px) clamp(24px, 6vw, 96px) 72px;
+}
+
 .hero {
   max-width: 1100px;
   margin: 0 auto;

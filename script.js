@@ -9,6 +9,7 @@ const favoritesContainer = document.getElementById("favorites-container");
 const dailyLogContainer = document.getElementById("daily-log-container");
 const dailyTotals = document.getElementById("daily-totals");
 const MINIMUM_MATCH_SCORE = 70;
+const MAX_CLOSEST_SUGGESTIONS = 250;
 const navTabs = document.querySelectorAll(".nav-tab");
 const tabPages = document.querySelectorAll(".tab-page");
 const loginForm = document.getElementById("login-form");
@@ -936,6 +937,13 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
                 combination: combinationTotal,
                 score: score
             });
+
+            if (includeClosest && suggestions.length > MAX_CLOSEST_SUGGESTIONS) {
+                suggestions.sort(function (firstSuggestion, secondSuggestion) {
+                    return secondSuggestion.score - firstSuggestion.score;
+                });
+                suggestions.length = MAX_CLOSEST_SUGGESTIONS;
+            }
         }
     }
 
@@ -1023,49 +1031,48 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
 }
 
 function displayCalculatorMealSuggestions(mealTarget, dailyTarget, mealsPerDay, dietPreference) {
-    const allSuggestions = findBalancedMealSuggestions(mealTarget, dietPreference);
+    const allSuggestions = findBalancedMealSuggestions(mealTarget, dietPreference, true);
     const usedFoodIds = new Set();
     const usedMealSignatures = new Set();
     const mealSuggestions = [];
 
-    allSuggestions.forEach(function (suggestion) {
-        if (mealSuggestions.length >= mealsPerDay) {
-            return;
-        }
+    while (mealSuggestions.length < mealsPerDay) {
+        let bestSuggestion = null;
+        let bestOverlap = Infinity;
 
-        const signature = suggestion.combination.items.map(function (item) {
-            return String(item.food.id);
-        }).sort().join("-");
-        const usesExistingFood = suggestion.combination.items.some(function (item) {
-            return usedFoodIds.has(String(item.food.id));
+        allSuggestions.forEach(function (suggestion) {
+            const signature = suggestion.combination.items.map(function (item) {
+                return String(item.food.id);
+            }).sort().join("-");
+
+            if (usedMealSignatures.has(signature)) {
+                return;
+            }
+
+            const overlap = suggestion.combination.items.filter(function (item) {
+                return usedFoodIds.has(String(item.food.id));
+            }).length;
+
+            if (overlap < bestOverlap ||
+                (overlap === bestOverlap && bestSuggestion && suggestion.score > bestSuggestion.score)) {
+                bestSuggestion = suggestion;
+                bestOverlap = overlap;
+            }
         });
 
-        if (usedMealSignatures.has(signature) || usesExistingFood) {
-            return false;
+        if (!bestSuggestion) {
+            break;
         }
 
-        usedMealSignatures.add(signature);
-        suggestion.combination.items.forEach(function (item) {
+        const bestSignature = bestSuggestion.combination.items.map(function (item) {
+            return String(item.food.id);
+        }).sort().join("-");
+        usedMealSignatures.add(bestSignature);
+        bestSuggestion.combination.items.forEach(function (item) {
             usedFoodIds.add(String(item.food.id));
         });
-        mealSuggestions.push(suggestion);
-    });
-
-    // If strict ingredient separation cannot fill the plan, use unique combinations.
-    allSuggestions.forEach(function (suggestion) {
-        if (mealSuggestions.length >= mealsPerDay) {
-            return;
-        }
-
-        const signature = suggestion.combination.items.map(function (item) {
-            return String(item.food.id);
-        }).sort().join("-");
-
-        if (!usedMealSignatures.has(signature)) {
-            usedMealSignatures.add(signature);
-            mealSuggestions.push(suggestion);
-        }
-    });
+        mealSuggestions.push(bestSuggestion);
+    }
     const suggestionsContainer = document.getElementById("calculator-meal-suggestions");
 
     if (!suggestionsContainer) {
