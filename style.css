@@ -1813,3 +1813,21 @@ button[type="submit"]:active {
     flex-direction: column;
   }
 }
+
+.go-to-calculator-btn {
+    margin-top: 12px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #16a34a;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.go-to-calculator-btn:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+}
