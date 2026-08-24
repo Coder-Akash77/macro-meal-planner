@@ -832,30 +832,52 @@ macroForm.addEventListener("submit", function (event) {
 
     // Validation checks
 
-    if (!calories || !protein || !carbs || !fat || !fiber) {
-        formError.textContent = "Please fill in all fields.";
-        return;
-    }
-
-    if (calories <= 0 || protein <= 0 || carbs <= 0 || fat <= 0 || fiber <= 0) {
-        formError.textContent = "Values must be greater than 0.";
-        return;
-    }
-
+    
     const macroCalories = protein * 4 + carbs * 4 + fat * 9;
 
-    // Allow a reasonable difference between calorie target
-    // and calories calculated from protein/carbs/fat.
-    const calorieDifferencePercent =
-        Math.abs(macroCalories - calories) / calories * 100;
+const calorieDifferencePercent =
+    Math.abs(macroCalories - calories) / calories * 100;
 
-    if (calorieDifferencePercent > 20) {
-        consistencyWarning.style.display = "block";
-        consistencyWarning.textContent =
-            `Your calorie target (${calories} kcal) does not match your macro targets (${macroCalories.toFixed(0)} kcal). ` +
-            `Please adjust your calories or protein, carbs, and fat targets so they are reasonably consistent.`;
-        return;
-    } else {
+if (calorieDifferencePercent > 20) {
+    consistencyWarning.style.display = "block";
+
+    consistencyWarning.innerHTML = `
+        <div class="consistency-message">
+            <strong>Your calorie and macro targets don't match.</strong>
+            <p>
+                Your calorie target is ${calories} kcal, but your
+                protein, carbs, and fat add up to only
+                ${macroCalories.toFixed(0)} kcal.
+            </p>
+
+            <button type="button"
+                    id="go-to-calculator-btn"
+                    class="go-to-calculator-btn">
+                Calculate Your Daily Needs
+            </button>
+        </div>
+    `;
+
+    // Make sure the user sees the message
+    setTimeout(function () {
+        consistencyWarning.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+    }, 100);
+
+    document
+        .getElementById("go-to-calculator-btn")
+        .addEventListener("click", function () {
+            switchTab("calculator");
+        });
+
+    return;
+}
+
+// consistencyWarning.style.display = "none";
+    
+ else {
         consistencyWarning.style.display = "none";
     }
 
@@ -1246,3 +1268,4 @@ foodListContainer.addEventListener("click", function (event) {
         clearFoodFilters();
     }
 });
+
