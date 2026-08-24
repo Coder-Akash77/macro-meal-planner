@@ -9,7 +9,7 @@ const favoritesContainer = document.getElementById("favorites-container");
 const dailyLogContainer = document.getElementById("daily-log-container");
 const dailyTotals = document.getElementById("daily-totals");
 const MINIMUM_MATCH_SCORE = 70;
-const MAX_CLOSEST_SUGGESTIONS = 250;
+const MAX_CLOSEST_SUGGESTIONS = 1000;
 const navTabs = document.querySelectorAll(".nav-tab");
 const tabPages = document.querySelectorAll(".tab-page");
 const loginForm = document.getElementById("login-form");
@@ -157,11 +157,12 @@ function displayFoods(foods) {
         const carbsCalories = Number(food.carbsPer100g) * 4;
         const fatCalories = Number(food.fatPer100g) * 9;
         const fiberGrams = getFiberPer100g(food);
-        const totalMacroAmount = proteinCalories + carbsCalories + fatCalories + fiberGrams * 4 || 1;
+        const totalMacroAmount = proteinCalories + carbsCalories + fatCalories + fiberGrams *2 ;
+
         const proteinShare = (proteinCalories / totalMacroAmount) * 100;
         const carbsShare = (carbsCalories / totalMacroAmount) * 100;
         const fatShare = (fatCalories / totalMacroAmount) * 100;
-        const fiberShare = (fiberGrams * 4 / totalMacroAmount) * 100;
+        const fiberShare = (fiberGrams * 2 / totalMacroAmount) * 100;
 
         foodItem.innerHTML = `
             <div class="food-item-topline">
@@ -172,7 +173,10 @@ function displayFoods(foods) {
                 </span>
             </div>
             <strong>${food.name}</strong>
-            <div class="food-calories">${(proteinCalories + carbsCalories + fatCalories).toFixed(0)} kcal <span>per 100g</span></div>
+            <div class="food-calories">
+    ${(proteinCalories + carbsCalories + fatCalories + fiberGrams * 2).toFixed(0)} kcal
+    <span>per 100g</span>
+</div>
             <div class="food-macros">
                 <span><b>${food.proteinPer100g}g</b><small>Protein</small></span>
                 <span><b>${food.carbsPer100g}g</b><small>Carbs</small></span>
@@ -269,6 +273,7 @@ function getFiberPer100g(food) {
 
 function calculateNutrition(food, quantityInGrams) {
     const multiplier = quantityInGrams / 100;
+
     const protein = food.proteinPer100g * multiplier;
     const carbs = food.carbsPer100g * multiplier;
     const fat = food.fatPer100g * multiplier;
@@ -277,14 +282,16 @@ function calculateNutrition(food, quantityInGrams) {
     return {
         name: food.name,
         quantityInGrams: quantityInGrams,
-        calories: (protein * 4) + (carbs * 4) + (fat * 9),
+
+        // Fiber contributes 2 kcal per gram
+        calories: (protein * 4) + (carbs * 4) + (fat * 9) + (fiber * 2),
+
         protein: protein,
         carbs: carbs,
         fat: fat,
         fiber: fiber
     };
 }
-
 
 
 function getServingSizes(food) {
@@ -833,7 +840,7 @@ macroForm.addEventListener("submit", function (event) {
     // Validation checks
 
     
-    const macroCalories = protein * 4 + carbs * 4 + fat * 9;
+    const macroCalories = protein * 4 + carbs * 4 + fat * 9+fiber*2;
 
 const calorieDifferencePercent =
     Math.abs(macroCalories - calories) / calories * 100;
@@ -846,7 +853,7 @@ if (calorieDifferencePercent > 20) {
             <strong>Your calorie and macro targets don't match.</strong>
             <p>
                 Your calorie target is ${calories} kcal, but your
-                protein, carbs, and fat add up to only
+                protein, carbs,fatand fiber add up to only
                 ${macroCalories.toFixed(0)} kcal.
             </p>
 
@@ -932,7 +939,7 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
     const foods = getCalculatorMealFoods(dietPreference);
     const proteins = foods.filter(function (food) {
         return food.category === "Protein";
-    }).slice(0, 4);
+    }).slice(0, 10);
     const carbs = foods.filter(function (food) {
         return food.category === "Carbs";
     }).slice(0, 5);
@@ -1061,46 +1068,145 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
 function displayCalculatorMealSuggestions(mealTarget, dailyTarget, mealsPerDay, dietPreference) {
     const allSuggestions = findBalancedMealSuggestions(mealTarget, dietPreference, true);
     const usedFoodIds = new Set();
-    const usedMealSignatures = new Set();
-    const mealSuggestions = [];
+const usedMealSignatures = new Set();
+const mealSuggestions = [];
 
-    while (mealSuggestions.length < mealsPerDay) {
-        let bestSuggestion = null;
-        let bestOverlap = Infinity;
+let previousProteinId = null;
+
+for (let mealIndex = 0; mealIndex < mealsPerDay; mealIndex++) {
+
+    let bestSuggestion = null;
+    let bestScore = -Infinity;
+
+    allSuggestions.forEach(function (suggestion) {
+
+        const signature = suggestion.combination.items
+            .map(function (item) {
+                return String(item.food.id);
+            })
+            .sort()
+            .join("-");
+
+        // Don't show the exact same meal again
+        if (usedMealSignatures.has(signature)) {
+            return;
+        }
+
+        // Find protein source
+        const proteinItem = suggestion.combination.items.find(function (item) {
+            return item.food.category === "Protein";
+        });
+
+        if (!proteinItem) {
+            return;
+        }
+
+        const proteinId = String(proteinItem.food.id);
+
+        // IMPORTANT:
+        // Same protein is NOT allowed in consecutive meals
+        if (proteinId === previousProteinId) {
+            return;
+        }
+
+        let repetitionPenalty = 0;
+
+        suggestion.combination.items.forEach(function (item) {
+
+            const foodId = String(item.food.id);
+
+            if (usedFoodIds.has(foodId)) {
+
+                if (item.food.category === "Protein") {
+                    repetitionPenalty += 8;
+                } else if (item.food.category === "Carbs") {
+                    repetitionPenalty += 5;
+                } else if (item.food.category === "Fat") {
+                    repetitionPenalty += 4;
+                } else {
+                    repetitionPenalty += 2;
+                }
+            }
+        });
+
+        const adjustedScore =
+            suggestion.score - repetitionPenalty;
+
+        if (adjustedScore > bestScore) {
+            bestScore = adjustedScore;
+            bestSuggestion = suggestion;
+        }
+    });
+
+    // Fallback:
+    // If no meal is available without repeating the previous
+    // protein, allow a different meal with the best score.
+    if (!bestSuggestion) {
 
         allSuggestions.forEach(function (suggestion) {
-            const signature = suggestion.combination.items.map(function (item) {
-                return String(item.food.id);
-            }).sort().join("-");
+
+            const signature = suggestion.combination.items
+                .map(function (item) {
+                    return String(item.food.id);
+                })
+                .sort()
+                .join("-");
 
             if (usedMealSignatures.has(signature)) {
                 return;
             }
 
-            const overlap = suggestion.combination.items.filter(function (item) {
-                return usedFoodIds.has(String(item.food.id));
-            }).length;
+            const proteinItem = suggestion.combination.items.find(function (item) {
+                return item.food.category === "Protein";
+            });
 
-            if (overlap < bestOverlap ||
-                (overlap === bestOverlap && bestSuggestion && suggestion.score > bestSuggestion.score)) {
+            if (!proteinItem) {
+                return;
+            }
+
+            let adjustedScore = suggestion.score;
+
+            suggestion.combination.items.forEach(function (item) {
+                if (usedFoodIds.has(String(item.food.id))) {
+                    adjustedScore -= 3;
+                }
+            });
+
+            if (!bestSuggestion || adjustedScore > bestScore) {
+                bestScore = adjustedScore;
                 bestSuggestion = suggestion;
-                bestOverlap = overlap;
             }
         });
-
-        if (!bestSuggestion) {
-            break;
-        }
-
-        const bestSignature = bestSuggestion.combination.items.map(function (item) {
-            return String(item.food.id);
-        }).sort().join("-");
-        usedMealSignatures.add(bestSignature);
-        bestSuggestion.combination.items.forEach(function (item) {
-            usedFoodIds.add(String(item.food.id));
-        });
-        mealSuggestions.push(bestSuggestion);
     }
+
+    if (!bestSuggestion) {
+        break;
+    }
+
+    const bestSignature = bestSuggestion.combination.items
+        .map(function (item) {
+            return String(item.food.id);
+        })
+        .sort()
+        .join("-");
+
+    usedMealSignatures.add(bestSignature);
+
+    bestSuggestion.combination.items.forEach(function (item) {
+        usedFoodIds.add(String(item.food.id));
+    });
+
+    // Remember this meal's protein
+    const selectedProtein = bestSuggestion.combination.items.find(function (item) {
+        return item.food.category === "Protein";
+    });
+
+    if (selectedProtein) {
+        previousProteinId = String(selectedProtein.food.id);
+    }
+
+    mealSuggestions.push(bestSuggestion);
+}
     const suggestionsContainer = document.getElementById("calculator-meal-suggestions");
 
     if (!suggestionsContainer) {
@@ -1146,7 +1252,8 @@ function displayCalculatorMealSuggestions(mealTarget, dailyTarget, mealsPerDay, 
 calorieForm.addEventListener("submit", function (event) {
     event.preventDefault();
 
-    const height = Number(document.getElementById("height").value);
+    const heightCm = Number(document.getElementById("height").value);
+    const height = heightCm/100;
     const weight = Number(document.getElementById("weight").value);
     const activityLevel = Number(document.getElementById("activity-level").value);
     const mealsPerDay = Number(document.getElementById("meals-per-day").value);
@@ -1186,9 +1293,22 @@ calorieForm.addEventListener("submit", function (event) {
         "weight-gain": 0.25
     };
     const protein = Math.round(weight * proteinPerKgByGoal[goal]);
-    const fat = Math.round((calories * fatRatioByGoal[goal]) / 9);
-    const carbs = Math.max(1, Math.round((calories - (protein * 4) - (fat * 9)) / 4));
-    const fiber = Math.round(calories / 1000 * 14);
+
+const fat = Math.round(
+    (calories * fatRatioByGoal[goal]) / 9
+);
+
+const fiber = Math.round(
+    calories / 1000 * 14
+);
+
+// Fiber = 2 kcal/g
+const carbs = Math.max(
+    1,
+    Math.round(
+        (calories - (protein * 4) - (fat * 9) - (fiber * 2)) / 4
+    )
+);
     const mealTarget = {
         calories: Math.round(calories / mealsPerDay),
         protein: Math.round(protein / mealsPerDay * 10) / 10,
