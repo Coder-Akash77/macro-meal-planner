@@ -17,6 +17,60 @@ Instead of manually trying different food combinations, you enter your target ca
 
 These visuals show the brand direction and the app's nutrition-focused identity, giving a quick sense of the project before you explore the features and functionality.
 
+## App Walkthrough
+
+### 1. Login and role selection
+
+Users begin by choosing a workspace role before accessing the planner. The login flow keeps the experience simple and clear:
+
+* Select whether you are accessing as a user or admin
+* Enter your username and password
+* Continue into the planner area with a single action
+
+This is designed to keep the app approachable while still supporting the admin tools in the same project.
+
+### 2. Calorie calculator
+
+On the calculator page, the user enters their basic body data and nutrition goal to generate a starting point for the plan.
+
+* Height and weight
+* Activity level
+* Meals per day
+* Goal selection such as fat loss or muscle gain
+* Estimated calorie and macro recommendations
+
+This makes the tool easier to use because it turns raw metrics into practical daily targets before the meal suggestions are generated.
+
+### 3. Meal planner
+
+The planner takes those targets and searches through the food database to find combinations that are close to the requested calories and macros.
+
+It helps users by:
+
+* comparing food combinations against targets
+* ranking matches by closeness
+* showing nutrition totals for each result
+* allowing users to save favorites and log meals locally
+
+### 4. Food database overview
+
+The food database is designed to help users browse ingredients quickly and make decisions without confusion. The interface is organized into a clean dashboard that includes:
+
+* Total food count
+* Vegetarian and non-vegetarian totals
+* Search bar for ingredient lookup
+* Diet filters such as all foods, vegetarian and non-vegetarian
+* Category filters for easy navigation
+* Clear filters option to reset the search
+
+The screenshot layout below is a good example of how the database is meant to feel: fast, readable, and focused on nutrition data.
+
+<p align="center">
+  <img src="assets/logo-preview-white.jpg" alt="MacroMeal UI preview" width="900" />
+</p>
+
+The view helps users understand the app at a glance because the information is grouped into clear sections rather than displayed as a long raw list.
+
 ## What it does
 
 * Calculates estimated daily calorie and macro targets
