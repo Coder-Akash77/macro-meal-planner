@@ -26,58 +26,56 @@
                 <button type="button" class="role-option" data-role="admin">Admin</button>
             </div>
             <div id="login-view">
-    <form id="login-form">
-        <div class="form-group">
-            <label for="login-username">Username</label>
-            <input type="text" id="login-username" autocomplete="username" required
-                placeholder="Enter your username">
-        </div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" autocomplete="username" required
+                            placeholder="Enter your username">
+                    </div>
 
-        <div class="form-group">
-            <label for="login-password">Password</label>
-            <input type="password" id="login-password" autocomplete="current-password" required
-                placeholder="Enter your password">
-        </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" autocomplete="current-password" required
+                            placeholder="Enter your password">
+                    </div>
 
-        <button type="submit">Continue as <span id="selected-role-label">User</span></button>
-        <p id="login-error" class="error-message" role="alert"></p>
-    </form>
+                    <button type="submit">Continue as <span id="selected-role-label">User</span></button>
+                    <p id="login-error" class="error-message" role="alert"></p>
+                </form>
 
-    <p class="auth-switch">
-        New user?
-        <button type="button" id="show-signup">Create an account</button>
-    </p>
-</div>
+                <p class="auth-switch">
+                    New user?
+                    <button type="button" id="show-signup">Create an account</button>
+                </p>
+            </div>
 
-<div id="signup-view" style="display: none;">
-    <form id="signup-form">
-        <div class="form-group">
-            <label for="signup-username">Username</label>
-            <input type="text" id="signup-username" required
-                placeholder="Choose a username">
-        </div>
+            <div id="signup-view" style="display: none;">
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="signup-username">Username</label>
+                        <input type="text" id="signup-username" required placeholder="Choose a username">
+                    </div>
 
-        <div class="form-group">
-            <label for="signup-password">Password</label>
-            <input type="password" id="signup-password" required
-                placeholder="Create a password">
-        </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required placeholder="Create a password">
+                    </div>
 
-        <div class="form-group">
-            <label for="signup-confirm-password">Confirm Password</label>
-            <input type="password" id="signup-confirm-password" required
-                placeholder="Confirm your password">
-        </div>
+                    <div class="form-group">
+                        <label for="signup-confirm-password">Confirm Password</label>
+                        <input type="password" id="signup-confirm-password" required
+                            placeholder="Confirm your password">
+                    </div>
 
-        <button type="submit">Create Account</button>
-        <p id="signup-error" class="error-message" role="alert"></p>
-    </form>
+                    <button type="submit">Create Account</button>
+                    <p id="signup-error" class="error-message" role="alert"></p>
+                </form>
 
-    <p class="auth-switch">
-        Already have an account?
-        <button type="button" id="show-login">Back to Login</button>
-    </p>
-</div>
+                <p class="auth-switch">
+                    Already have an account?
+                    <button type="button" id="show-login">Back to Login</button>
+                </p>
+            </div>
             <p class="login-note">Demo admin login: <strong>admin</strong> / <strong>admin123</strong></p>
         </div>
     </div>
@@ -93,7 +91,8 @@
             <button class="nav-tab admin-only" data-tab="admin">Admin</button>
             <button class="nav-tab" data-tab="favorites">Favorites</button>
             <button class="nav-tab" data-tab="log">Daily Log</button>
-            <button class="nav-tab" id="test-logout-btn" style="margin-left:auto;">Logout</button>
+
+            <button class="nav-tab" data-tab="profile" id="profile-icon-btn" style="margin-left:auto;font-size:1.1rem;" title="Profile">👤</button>
         </div>
     </nav>
 
@@ -245,87 +244,55 @@
                 <h2>Set Your Targets</h2>
                 <form id="macro-form">
 
-    <div class="form-group">
-        <label for="calories">Calories (kcal)</label>
-        <input type="number"
-               id="calories"
-               name="calories"
-               min="1"
-               placeholder="e.g. 500"
-               required>
-    </div>
+                    <div class="form-group">
+                        <label for="calories">Calories (kcal)</label>
+                        <input type="number" id="calories" name="calories" min="1" placeholder="e.g. 500" required>
+                    </div>
 
-    <div class="form-group">
-        <label for="protein">Protein (g)</label>
-        <input type="number"
-               id="protein"
-               name="protein"
-               min="1"
-               placeholder="e.g. 30"
-               required>
-    </div>
+                    <div class="form-group">
+                        <label for="protein">Protein (g)</label>
+                        <input type="number" id="protein" name="protein" min="1" placeholder="e.g. 30" required>
+                    </div>
 
-    <div class="form-group">
-        <label for="carbs">Carbs (g)</label>
-        <input type="number"
-               id="carbs"
-               name="carbs"
-               min="1"
-               placeholder="e.g. 50"
-               required>
-    </div>
+                    <div class="form-group">
+                        <label for="carbs">Carbs (g)</label>
+                        <input type="number" id="carbs" name="carbs" min="1" placeholder="e.g. 50" required>
+                    </div>
 
-    <div class="form-group">
-        <label for="fat">Fat (g)</label>
-        <input type="number"
-               id="fat"
-               name="fat"
-               min="1"
-               placeholder="e.g. 20"
-               required>
-    </div>
+                    <div class="form-group">
+                        <label for="fat">Fat (g)</label>
+                        <input type="number" id="fat" name="fat" min="1" placeholder="e.g. 20" required>
+                    </div>
 
-    <div class="form-group">
-        <label for="fiber">Fiber (g)</label>
-        <input type="number"
-               id="fiber"
-               name="fiber"
-               min="1"
-               placeholder="e.g. 28"
-               required>
-    </div>
+                    <div class="form-group">
+                        <label for="fiber">Fiber (g)</label>
+                        <input type="number" id="fiber" name="fiber" min="1" placeholder="e.g. 28" required>
+                    </div>
 
-    <div class="form-group">
-        <label>Dietary Preference</label>
+                    <div class="form-group">
+                        <label>Dietary Preference</label>
 
-        <div class="radio-group">
-            <label>
-                <input type="radio"
-                       name="dietPreference"
-                       value="veg"
-                       checked>
-                Vegetarian
-            </label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="dietPreference" value="veg" checked>
+                                Vegetarian
+                            </label>
 
-            <label>
-                <input type="radio"
-                       name="dietPreference"
-                       value="non-veg">
-                Non-Vegetarian
-            </label>
-        </div>
-    </div>
+                            <label>
+                                <input type="radio" name="dietPreference" value="non-veg">
+                                Non-Vegetarian
+                            </label>
+                        </div>
+                    </div>
 
-   <button type="submit">Find Meals</button>
+                    <button type="submit">Find Meals</button>
 
-</form>
+                </form>
 
-<p id="form-error" class="error-message"></p>
+                <p id="form-error" class="error-message"></p>
 
-<div id="consistency-warning"
-     class="warning-message"
-     style="display: none;">
-</div>
+                <div id="consistency-warning" class="warning-message" style="display: none;">
+                </div>
             </section>
 
             <section id="results-section">
@@ -473,7 +440,9 @@
         </main>
     </div>
 
-    <!-- ============ DAILY LOG TAB ============ -->
+
+
+        <!-- ============ DAILY LOG TAB ============ -->
     <div class="tab-page app-shell" id="tab-log">
         <main>
             <section id="daily-log-section">
@@ -485,6 +454,59 @@
             </section>
         </main>
     </div>
+
+    <!-- ============ PROFILE TAB ============ -->
+    <div class="tab-page app-shell" id="tab-profile">
+    <main>
+        <section id="profile-section">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profile-avatar">
+    <svg viewBox="0 0 24 24" fill="currentColor" width="36" height="36">
+        <path d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zm0 2.5c-3.3 0-9.8 1.6-9.8 4.9v2.4h19.6v-2.4c0-3.3-6.5-4.9-9.8-4.9z"/>
+    </svg>
+</div>
+                <div class="profile-header-info">
+                    <h2 id="profile-username">Username</h2>
+                    <div class="profile-badges">
+                        <span class="goal-result-badge" id="profile-role-badge">Role</span>
+                        <span class="profile-status"><span class="context-dot"></span>Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-block">
+                <span class="section-kicker">ACCOUNT INFORMATION</span>
+                <div class="profile-info-grid">
+                    <div class="profile-info-row"><span>Username</span><strong id="profile-info-username">—</strong></div>
+                    <div class="profile-info-row"><span>Role</span><strong id="profile-info-role">—</strong></div>
+                    <div class="profile-info-row"><span>Status</span><strong>Active</strong></div>
+                </div>
+            </div>
+
+            <div class="profile-block">
+                <span class="section-kicker">ACTIVITY</span>
+                <div class="database-stats profile-stats">
+                    <div class="database-stat database-stat-total">
+                        <span class="database-stat-icon" aria-hidden="true">⭐</span>
+                        <span><strong id="profile-favorites-count">0</strong><small>Favorites</small></span>
+                    </div>
+                    <div class="database-stat database-stat-veg">
+                        <span class="database-stat-icon" aria-hidden="true">📋</span>
+                        <span><strong id="profile-log-count">0</strong><small>Meals Logged</small></span>
+                    </div>
+                    <div class="database-stat database-stat-nonveg">
+                        <span class="database-stat-icon" aria-hidden="true">🥗</span>
+                        <span><strong id="profile-custom-count">0</strong><small>Custom Foods</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="logout-btn" class="logout-btn">Logout</button>
+        </section>
+    </main>
+</div>
+
+
 
     <script src="script.js?v=8"></script>
 </body>

@@ -168,7 +168,7 @@ function displayFoods(foods) {
         const carbsCalories = Number(food.carbsPer100g) * 4;
         const fatCalories = Number(food.fatPer100g) * 9;
         const fiberGrams = getFiberPer100g(food);
-        const totalMacroAmount = proteinCalories + carbsCalories + fatCalories + fiberGrams *2 ;
+        const totalMacroAmount = proteinCalories + carbsCalories + fatCalories + fiberGrams * 2;
 
         const proteinShare = (proteinCalories / totalMacroAmount) * 100;
         const carbsShare = (carbsCalories / totalMacroAmount) * 100;
@@ -723,7 +723,7 @@ roleOptions.forEach(function (option) {
 });
 
 
-function showApp(role) {
+function showApp(role, username) {
     document.getElementById("login-page").classList.add("hidden");
 
     document.querySelectorAll(".app-shell").forEach(function (element) {
@@ -734,7 +734,21 @@ function showApp(role) {
 
     selectedRole = role;
 
+    const roleLabel = role === "admin" ? "Admin" : "User";
+    document.getElementById("profile-avatar").textContent = username.charAt(0).toUpperCase();
+    document.getElementById("profile-username").textContent = username;
+    document.getElementById("profile-role-badge").textContent = roleLabel;
+    document.getElementById("profile-info-username").textContent = username;
+    document.getElementById("profile-info-role").textContent = roleLabel;
+    updateProfileStats();
+
     switchTab(role === "admin" ? "admin" : "home");
+}
+
+function updateProfileStats() {
+    document.getElementById("profile-favorites-count").textContent = getFavorites().length;
+    document.getElementById("profile-log-count").textContent = getTodayLog().length;
+    document.getElementById("profile-custom-count").textContent = getCustomFoods().length;
 }
 
 function getUsers() {
@@ -769,7 +783,7 @@ signupForm.addEventListener("submit", function (event) {
     if (password !== confirmPassword) {
         signupError.textContent = "Passwords do not match.";
         if (username.length < 3) { signupError.textContent = "Username must be at least 3 characters."; return; }
-if (password.length < 4) { signupError.textContent = "Password must be at least 4 characters."; return; }
+        if (password.length < 4) { signupError.textContent = "Password must be at least 4 characters."; return; }
         return;
     }
 
@@ -819,8 +833,8 @@ loginForm.addEventListener("submit", function (event) {
             loginError.textContent = "Use the demo admin credentials shown below.";
             return;
         }
-        localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "admin", username: "admin" }));
-        showApp("admin");
+               localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "admin", username: "admin" }));
+        showApp("admin", "admin");
         return;
     }
 
@@ -834,8 +848,8 @@ loginForm.addEventListener("submit", function (event) {
         return;
     }
 
-    localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "user", username: validUser.username }));
-    showApp("user");
+        localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "user", username: validUser.username }));
+    showApp("user", validUser.username);
 });
 
 const savedLogin = localStorage.getItem(LOGIN_KEY);
@@ -844,9 +858,10 @@ if (savedLogin) {
     try {
         const loginData = JSON.parse(savedLogin);
 
-        if (loginData.loggedIn && loginData.role) {
-            showApp(loginData.role);
+                if (loginData.loggedIn && loginData.role) {
+            showApp(loginData.role, loginData.username);
         }
+
     } catch (error) {
         localStorage.removeItem(LOGIN_KEY);
     }
@@ -930,6 +945,7 @@ resultsContainer.addEventListener("click", function (event) {
 
         saveFavorite(mealToSave);
         displayFavorites();
+        updateProfileStats();
         alert("Meal saved to favorites!");
     }
 
@@ -940,6 +956,7 @@ resultsContainer.addEventListener("click", function (event) {
 
         logMeal(mealToLog);
         displayDailyLog();
+        updateProfileStats();
         alert("Meal logged for today!");
     }
 });
@@ -948,7 +965,9 @@ favoritesContainer.addEventListener("click", function (event) {
     if (event.target.classList.contains("delete-favorite-btn")) {
         const id = Number(event.target.dataset.id);
         deleteFavorite(id);
+        deleteLoggedMeal(id);
         displayFavorites(); // re-render after deletion
+        updateProfileStats();
     }
 });
 
@@ -967,16 +986,16 @@ macroForm.addEventListener("submit", function (event) {
 
     // Validation checks
 
-    
-    const macroCalories = protein * 4 + carbs * 4 + fat * 9+fiber*2;
 
-const calorieDifferencePercent =
-    Math.abs(macroCalories - calories) / calories * 100;
+    const macroCalories = protein * 4 + carbs * 4 + fat * 9 + fiber * 2;
 
-if (calorieDifferencePercent > 20) {
-    consistencyWarning.style.display = "block";
+    const calorieDifferencePercent =
+        Math.abs(macroCalories - calories) / calories * 100;
 
-    consistencyWarning.innerHTML = `
+    if (calorieDifferencePercent > 20) {
+        consistencyWarning.style.display = "block";
+
+        consistencyWarning.innerHTML = `
         <div class="consistency-message">
             <strong>Your calorie and macro targets don't match.</strong>
             <p>
@@ -993,26 +1012,26 @@ if (calorieDifferencePercent > 20) {
         </div>
     `;
 
-    // Make sure the user sees the message
-    setTimeout(function () {
-        consistencyWarning.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
-    }, 100);
+        // Make sure the user sees the message
+        setTimeout(function () {
+            consistencyWarning.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }, 100);
 
-    document
-        .getElementById("go-to-calculator-btn")
-        .addEventListener("click", function () {
-            switchTab("calculator");
-        });
+        document
+            .getElementById("go-to-calculator-btn")
+            .addEventListener("click", function () {
+                switchTab("calculator");
+            });
 
-    return;
-}
+        return;
+    }
 
-// consistencyWarning.style.display = "none";
-    
- else {
+    // consistencyWarning.style.display = "none";
+
+    else {
         consistencyWarning.style.display = "none";
     }
 
@@ -1031,6 +1050,7 @@ dailyLogContainer.addEventListener("click", function (event) {
         const id = Number(event.target.dataset.id);
         deleteLoggedMeal(id);
         displayDailyLog();
+        updateProfileStats();
     }
 });
 
@@ -1196,80 +1216,15 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
 function displayCalculatorMealSuggestions(mealTarget, dailyTarget, mealsPerDay, dietPreference) {
     const allSuggestions = findBalancedMealSuggestions(mealTarget, dietPreference, true);
     const usedFoodIds = new Set();
-const usedMealSignatures = new Set();
-const mealSuggestions = [];
+    const usedMealSignatures = new Set();
+    const mealSuggestions = [];
 
-let previousProteinId = null;
+    let previousProteinId = null;
 
-for (let mealIndex = 0; mealIndex < mealsPerDay; mealIndex++) {
+    for (let mealIndex = 0; mealIndex < mealsPerDay; mealIndex++) {
 
-    let bestSuggestion = null;
-    let bestScore = -Infinity;
-
-    allSuggestions.forEach(function (suggestion) {
-
-        const signature = suggestion.combination.items
-            .map(function (item) {
-                return String(item.food.id);
-            })
-            .sort()
-            .join("-");
-
-        // Don't show the exact same meal again
-        if (usedMealSignatures.has(signature)) {
-            return;
-        }
-
-        // Find protein source
-        const proteinItem = suggestion.combination.items.find(function (item) {
-            return item.food.category === "Protein";
-        });
-
-        if (!proteinItem) {
-            return;
-        }
-
-        const proteinId = String(proteinItem.food.id);
-
-        // IMPORTANT:
-        // Same protein is NOT allowed in consecutive meals
-        if (proteinId === previousProteinId) {
-            return;
-        }
-
-        let repetitionPenalty = 0;
-
-        suggestion.combination.items.forEach(function (item) {
-
-            const foodId = String(item.food.id);
-
-            if (usedFoodIds.has(foodId)) {
-
-                if (item.food.category === "Protein") {
-                    repetitionPenalty += 8;
-                } else if (item.food.category === "Carbs") {
-                    repetitionPenalty += 5;
-                } else if (item.food.category === "Fat") {
-                    repetitionPenalty += 4;
-                } else {
-                    repetitionPenalty += 2;
-                }
-            }
-        });
-
-        const adjustedScore =
-            suggestion.score - repetitionPenalty;
-
-        if (adjustedScore > bestScore) {
-            bestScore = adjustedScore;
-            bestSuggestion = suggestion;
-        }
-    });
-
-    // Fallback:
-    // If no meal is available without repeating the previous
-    // protein, allow a different meal with the best score.
-    if (!bestSuggestion) {
+        let bestSuggestion = null;
+        let bestScore = -Infinity;
 
         allSuggestions.forEach(function (suggestion) {
 
@@ -1280,10 +1235,12 @@ for (let mealIndex = 0; mealIndex < mealsPerDay; mealIndex++) {
                 .sort()
                 .join("-");
 
+            // Don't show the exact same meal again
             if (usedMealSignatures.has(signature)) {
                 return;
             }
 
+            // Find protein source
             const proteinItem = suggestion.combination.items.find(function (item) {
                 return item.food.category === "Protein";
             });
@@ -1292,49 +1249,112 @@ for (let mealIndex = 0; mealIndex < mealsPerDay; mealIndex++) {
                 return;
             }
 
-            let adjustedScore = suggestion.score;
+            const proteinId = String(proteinItem.food.id);
+
+            // IMPORTANT:
+            // Same protein is NOT allowed in consecutive meals
+            if (proteinId === previousProteinId) {
+                return;
+            }
+
+            let repetitionPenalty = 0;
 
             suggestion.combination.items.forEach(function (item) {
-                if (usedFoodIds.has(String(item.food.id))) {
-                    adjustedScore -= 3;
+
+                const foodId = String(item.food.id);
+
+                if (usedFoodIds.has(foodId)) {
+
+                    if (item.food.category === "Protein") {
+                        repetitionPenalty += 8;
+                    } else if (item.food.category === "Carbs") {
+                        repetitionPenalty += 5;
+                    } else if (item.food.category === "Fat") {
+                        repetitionPenalty += 4;
+                    } else {
+                        repetitionPenalty += 2;
+                    }
                 }
             });
 
-            if (!bestSuggestion || adjustedScore > bestScore) {
+            const adjustedScore =
+                suggestion.score - repetitionPenalty;
+
+            if (adjustedScore > bestScore) {
                 bestScore = adjustedScore;
                 bestSuggestion = suggestion;
             }
         });
+
+        // Fallback:
+        // If no meal is available without repeating the previous
+        // protein, allow a different meal with the best score.
+        if (!bestSuggestion) {
+
+            allSuggestions.forEach(function (suggestion) {
+
+                const signature = suggestion.combination.items
+                    .map(function (item) {
+                        return String(item.food.id);
+                    })
+                    .sort()
+                    .join("-");
+
+                if (usedMealSignatures.has(signature)) {
+                    return;
+                }
+
+                const proteinItem = suggestion.combination.items.find(function (item) {
+                    return item.food.category === "Protein";
+                });
+
+                if (!proteinItem) {
+                    return;
+                }
+
+                let adjustedScore = suggestion.score;
+
+                suggestion.combination.items.forEach(function (item) {
+                    if (usedFoodIds.has(String(item.food.id))) {
+                        adjustedScore -= 3;
+                    }
+                });
+
+                if (!bestSuggestion || adjustedScore > bestScore) {
+                    bestScore = adjustedScore;
+                    bestSuggestion = suggestion;
+                }
+            });
+        }
+
+        if (!bestSuggestion) {
+            break;
+        }
+
+        const bestSignature = bestSuggestion.combination.items
+            .map(function (item) {
+                return String(item.food.id);
+            })
+            .sort()
+            .join("-");
+
+        usedMealSignatures.add(bestSignature);
+
+        bestSuggestion.combination.items.forEach(function (item) {
+            usedFoodIds.add(String(item.food.id));
+        });
+
+        // Remember this meal's protein
+        const selectedProtein = bestSuggestion.combination.items.find(function (item) {
+            return item.food.category === "Protein";
+        });
+
+        if (selectedProtein) {
+            previousProteinId = String(selectedProtein.food.id);
+        }
+
+        mealSuggestions.push(bestSuggestion);
     }
-
-    if (!bestSuggestion) {
-        break;
-    }
-
-    const bestSignature = bestSuggestion.combination.items
-        .map(function (item) {
-            return String(item.food.id);
-        })
-        .sort()
-        .join("-");
-
-    usedMealSignatures.add(bestSignature);
-
-    bestSuggestion.combination.items.forEach(function (item) {
-        usedFoodIds.add(String(item.food.id));
-    });
-
-    // Remember this meal's protein
-    const selectedProtein = bestSuggestion.combination.items.find(function (item) {
-        return item.food.category === "Protein";
-    });
-
-    if (selectedProtein) {
-        previousProteinId = String(selectedProtein.food.id);
-    }
-
-    mealSuggestions.push(bestSuggestion);
-}
     const suggestionsContainer = document.getElementById("calculator-meal-suggestions");
 
     if (!suggestionsContainer) {
@@ -1381,7 +1401,7 @@ calorieForm.addEventListener("submit", function (event) {
     event.preventDefault();
 
     const heightCm = Number(document.getElementById("height").value);
-    const height = heightCm/100;
+    const height = heightCm / 100;
     const weight = Number(document.getElementById("weight").value);
     const activityLevel = Number(document.getElementById("activity-level").value);
     const mealsPerDay = Number(document.getElementById("meals-per-day").value);
@@ -1422,21 +1442,21 @@ calorieForm.addEventListener("submit", function (event) {
     };
     const protein = Math.round(weight * proteinPerKgByGoal[goal]);
 
-const fat = Math.round(
-    (calories * fatRatioByGoal[goal]) / 9
-);
+    const fat = Math.round(
+        (calories * fatRatioByGoal[goal]) / 9
+    );
 
-const fiber = Math.round(
-    calories / 1000 * 14
-);
+    const fiber = Math.round(
+        calories / 1000 * 14
+    );
 
-// Fiber = 2 kcal/g
-const carbs = Math.max(
-    1,
-    Math.round(
-        (calories - (protein * 4) - (fat * 9) - (fiber * 2)) / 4
-    )
-);
+    // Fiber = 2 kcal/g
+    const carbs = Math.max(
+        1,
+        Math.round(
+            (calories - (protein * 4) - (fat * 9) - (fiber * 2)) / 4
+        )
+    );
     const mealTarget = {
         calories: Math.round(calories / mealsPerDay),
         protein: Math.round(protein / mealsPerDay * 10) / 10,
@@ -1517,7 +1537,7 @@ foodListContainer.addEventListener("click", function (event) {
     }
 });
 
-document.getElementById("test-logout-btn").addEventListener("click", function () {
+document.getElementById("logout-btn").addEventListener("click", function () {
     localStorage.removeItem(LOGIN_KEY);
     location.reload();
 });
