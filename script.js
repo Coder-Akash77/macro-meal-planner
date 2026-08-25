@@ -835,7 +835,7 @@ loginForm.addEventListener("submit", function (event) {
             loginError.textContent = "Use the demo admin credentials shown below.";
             return;
         }
-               localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "admin", username: "admin" }));
+        localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "admin", username: "admin" }));
         showApp("admin", "admin");
         return;
     }
@@ -850,7 +850,7 @@ loginForm.addEventListener("submit", function (event) {
         return;
     }
 
-        localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "user", username: validUser.username }));
+    localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "user", username: validUser.username }));
     showApp("user", validUser.username);
 });
 
@@ -860,7 +860,7 @@ if (savedLogin) {
     try {
         const loginData = JSON.parse(savedLogin);
 
-                if (loginData.loggedIn && loginData.role) {
+        if (loginData.loggedIn && loginData.role) {
             showApp(loginData.role, loginData.username);
         }
 
@@ -1095,133 +1095,189 @@ function getCalculatorMealFoods(dietPreference) {
         }) === index;
     });
 }
-
 function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest) {
     const foods = getCalculatorMealFoods(dietPreference);
-    const proteins = foods.filter(function (food) {
-        return food.category === "Protein";
-    }).slice(0, 10);
-    const carbs = foods.filter(function (food) {
-        return food.category === "Carbs";
-    }).slice(0, 5);
-    const fats = foods.filter(function (food) {
-        return food.category === "Fat";
-    }).slice(0, 4);
-    const vegetables = foods.filter(function (food) {
-        return food.category === "Vegetable";
-    }).slice(0, 4);
-    const fiberSources = foodData.filter(function (food) {
-        const name = food.name.toLowerCase();
-        return name.includes("lentil") || name.includes("bean") || name.includes("chickpea") ||
-            name.includes("dal") || name.includes("oat") || name.includes("whole wheat") ||
-            name.includes("barley") || name.includes("seed") || food.category === "Vegetable";
-    }).sort(function (firstFood, secondFood) {
-        return getFiberPer100g(secondFood) - getFiberPer100g(firstFood);
-    }).slice(0, 4);
+    const proteins = foods
+        .filter(food => food.category === "Protein")
+        .slice(0, 8);
+    const carbs = foods
+        .filter(food => food.category === "Carbs")
+        .slice(0, 4);
+    const fats = foods
+        .filter(food => food.category === "Fat")
+        .slice(0, 3);
+    const vegetables = foods
+        .filter(food => food.category === "Vegetable")
+        .slice(0, 3);
+    const fiberSources = foodData
+        .filter(function (food) {
+            const name = food.name.toLowerCase();
+            return (
+                name.includes("lentil") ||
+                name.includes("bean") ||
+                name.includes("chickpea") ||
+                name.includes("dal") ||
+                name.includes("oat") ||
+                name.includes("whole wheat") ||
+                name.includes("barley") ||
+                name.includes("seed") ||
+                food.category === "Vegetable"
+            );
+        })
+        .sort(function (a, b) {
+            return getFiberPer100g(b) - getFiberPer100g(a);
+        })
+        .slice(0, 3);
+
     const suggestions = [];
+    const seen = new Set();
 
     function addSuggestion(items) {
         const combinationTotal = calculateCombinationTotal(items);
 
-        if (!includeClosest && !isWithinTolerance(combinationTotal, mealTarget)) {
+        const signature = items
+            .map(item => String(item.food.id))
+            .sort()
+            .join("-");
+
+        if (seen.has(signature)) {
             return;
         }
 
-        const score = calculateMatchScore(combinationTotal, mealTarget);
+        seen.add(signature);
+
+        if (
+            !includeClosest &&
+            !isWithinTolerance(combinationTotal, mealTarget)
+        ) {
+            return;
+        }
+
+        const score = calculateMatchScore(
+            combinationTotal,
+            mealTarget
+        );
+
         if (includeClosest || score >= MINIMUM_MATCH_SCORE) {
             suggestions.push({
                 combination: combinationTotal,
                 score: score
             });
-
-            if (includeClosest && suggestions.length > MAX_CLOSEST_SUGGESTIONS) {
-                suggestions.sort(function (firstSuggestion, secondSuggestion) {
-                    return secondSuggestion.score - firstSuggestion.score;
-                });
-                suggestions.length = MAX_CLOSEST_SUGGESTIONS;
-            }
         }
     }
+    function fastServingSizes(food) {
+        const sizes = getServingSizes(food);
+
+        if (sizes.length <= 3) {
+            return sizes;
+        }
+
+        return [
+            sizes[0],
+            sizes[Math.floor(sizes.length / 2)],
+            sizes[sizes.length - 1]
+        ];
+    }
+
 
     proteins.forEach(function (protein) {
+
         carbs.forEach(function (carb) {
+
             fats.forEach(function (fat) {
+
                 vegetables.forEach(function (vegetable) {
-                    fiberSources.forEach(function (fiberSource) {
-                        const usedFoods = [protein, carb, fat, vegetable];
-                        if (usedFoods.some(function (food) {
-                            return String(food.id) === String(fiberSource.id);
-                        })) {
-                            return;
-                        }
 
-                        getSearchServingSizes(protein).forEach(function (proteinQuantity) {
-                            getSearchServingSizes(carb).forEach(function (carbQuantity) {
-                                getSearchServingSizes(fat).forEach(function (fatQuantity) {
-                                    getSearchServingSizes(vegetable).forEach(function (vegetableQuantity) {
-                                        getSearchServingSizes(fiberSource).forEach(function (fiberQuantity) {
-                                            addSuggestion([
-                                                { food: protein, quantity: proteinQuantity },
-                                                { food: carb, quantity: carbQuantity },
-                                                { food: fat, quantity: fatQuantity },
-                                                { food: vegetable, quantity: vegetableQuantity },
-                                                { food: fiberSource, quantity: fiberQuantity }
-                                            ]);
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    });
-
-    // Higher-calorie meals sometimes need a second carb, using a smaller search set.
-    if (mealTarget.calories >= 850) {
-        proteins.slice(0, 3).forEach(function (protein) {
-            carbs.slice(0, 4).forEach(function (firstCarb, firstCarbIndex) {
-                carbs.slice(0, 4).forEach(function (secondCarb, secondCarbIndex) {
-                    if (firstCarbIndex >= secondCarbIndex) {
+                    
+                    if (
+                        protein.id === carb.id ||
+                        protein.id === fat.id ||
+                        protein.id === vegetable.id ||
+                        carb.id === fat.id ||
+                        carb.id === vegetable.id ||
+                        fat.id === vegetable.id
+                    ) {
                         return;
                     }
 
-                    fats.slice(0, 3).forEach(function (fat) {
-                        vegetables.slice(0, 3).forEach(function (vegetable) {
-                            if ([protein, firstCarb, secondCarb, fat].some(function (food) {
-                                return String(food.id) === String(vegetable.id);
-                            })) {
-                                return;
-                            }
+                    // Pick only the best fiber sources
+                    fiberSources.forEach(function (fiberSource) {
 
-                            getSearchServingSizes(protein).forEach(function (proteinQuantity) {
-                                getSearchServingSizes(firstCarb).forEach(function (firstCarbQuantity) {
-                                    getSearchServingSizes(secondCarb).forEach(function (secondCarbQuantity) {
-                                        getSearchServingSizes(fat).forEach(function (fatQuantity) {
-                                            getSearchServingSizes(vegetable).forEach(function (vegetableQuantity) {
-                                                addSuggestion([
-                                                    { food: protein, quantity: proteinQuantity },
-                                                    { food: firstCarb, quantity: firstCarbQuantity },
-                                                    { food: secondCarb, quantity: secondCarbQuantity },
-                                                    { food: fat, quantity: fatQuantity },
-                                                    { food: vegetable, quantity: vegetableQuantity }
-                                                ]);
-                                            });
+                        if (
+                            [
+                                protein,
+                                carb,
+                                fat,
+                                vegetable
+                            ].some(function (food) {
+                                return String(food.id) ===
+                                    String(fiberSource.id);
+                            })
+                        ) {
+                            return;
+                        }
+
+                        fastServingSizes(protein).forEach(function (proteinQuantity) {
+
+                            fastServingSizes(carb).forEach(function (carbQuantity) {
+
+                                fastServingSizes(fat).forEach(function (fatQuantity) {
+
+                                    fastServingSizes(vegetable).forEach(function (vegetableQuantity) {
+
+                                        fastServingSizes(fiberSource).forEach(function (fiberQuantity) {
+
+                                            addSuggestion([
+                                                {
+                                                    food: protein,
+                                                    quantity: proteinQuantity
+                                                },
+                                                {
+                                                    food: carb,
+                                                    quantity: carbQuantity
+                                                },
+                                                {
+                                                    food: fat,
+                                                    quantity: fatQuantity
+                                                },
+                                                {
+                                                    food: vegetable,
+                                                    quantity: vegetableQuantity
+                                                },
+                                                {
+                                                    food: fiberSource,
+                                                    quantity: fiberQuantity
+                                                }
+                                            ]);
+
                                         });
+
                                     });
+
                                 });
+
                             });
+
                         });
+
                     });
+
                 });
+
             });
+
         });
-    }
+
+    });
 
     suggestions.sort(function (a, b) {
         return b.score - a.score;
     });
+
+
+    if (suggestions.length > 100) {
+        suggestions.length = 100;
+    }
 
     return suggestions;
 }
