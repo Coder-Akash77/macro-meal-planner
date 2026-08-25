@@ -35,6 +35,8 @@ const foodForm = document.getElementById("food-form");
 const foodFormMessage = document.getElementById("food-form-message");
 const customFoodsContainer = document.getElementById("custom-foods-container");
 const customFoodCount = document.getElementById("custom-food-count");
+const restoreDatabaseButton = document.getElementById("restore-database-button");
+const restoreDatabaseMessage = document.getElementById("restore-database-message");
 
 // Hero buttons
 const goToPlannerBtn = document.getElementById("go-to-planner");
@@ -921,6 +923,17 @@ customFoodsContainer.addEventListener("click", function (event) {
     displayCustomFoods();
     renderFilteredFoods();
     document.getElementById("stat-food-count").textContent = foodData.length;
+});
+
+restoreDatabaseButton.addEventListener("click", async function () {
+    if (!window.confirm("Restore the original database? This will remove all locally added foods and undo built-in food removals.")) {
+        return;
+    }
+
+    localStorage.removeItem(CUSTOM_FOODS_KEY);
+    localStorage.removeItem(DELETED_FOODS_KEY);
+    await loadFoodData();
+    restoreDatabaseMessage.textContent = "The original food database has been restored.";
 });
 
 setupSearchDebounce();

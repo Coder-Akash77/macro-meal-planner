@@ -1,96 +1,173 @@
-# MacroMeal
+<div align="center">
 
-MacroMeal is a simple web-based nutrition planner that helps you build meals around your calorie and macro targets.
+# 🥗 MacroMeal
 
-Instead of manually trying different food combinations, you enter your target calories, protein, carbs, fats and fiber, and the app searches through the available foods to find combinations that are close to your requirements.
+### Hit your macros. Effortlessly.
 
-## What it does
+**A frontend nutrition planner that works *backwards* from your calorie and macro targets to find real food combinations that fit them.**
 
-* Calculates estimated daily calorie and macro targets
-* Generates meal suggestions based on calorie and macro requirements
-* Supports vegetarian and non-vegetarian meal plans
-* Searches and filters the food database
-* Shows nutrition values per 100g
-* Saves favorite meals
-* Keeps a daily meal log
-* Allows admins to add custom food items
-* Stores user-added data locally in the browser
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+![JSON](https://img.shields.io/badge/Data-JSON-000000?style=flat-square&logo=json&logoColor=white)
+![No Backend](https://img.shields.io/badge/Backend-None%20(Client--Side)-lightgrey?style=flat-square)
+![License](https://img.shields.io/badge/License-Student%20Project-informational?style=flat-square)
 
-The meal planner uses a combinatorial search approach and ranks combinations based on how closely they match the requested targets. The current matching logic uses a ±5% calorie tolerance and ±10% macro tolerance.
+[Overview](#-overview) • [Features](#-features) • [Screenshots](#-app-walkthrough) • [How It Works](#-how-the-matching-engine-works) • [Getting Started](#-getting-started) • [Project Structure](#-project-structure) • [Roadmap](#-roadmap)
 
-## Features
+</div>
 
-### Calorie Calculator
+---
 
-Enter your height, weight, activity level, number of meals and goal to get an estimated daily calorie target.
+## 📌 Overview
 
-Supported goals:
+Most calorie calculators stop at giving you a number. **MacroMeal goes one step further.**
 
-* Fat loss
-* Muscle build
-* Maintenance
-* Weight gain
+Instead of just telling you *"eat 2,100 kcal a day,"* it takes your calorie and macro targets — protein, carbs, fats, and fiber — and **searches a real food database to find combinations that actually hit those numbers.**
 
-The calculator is intended as a planning tool, not as medical advice.
+That single design decision turned this from a basic calculator into a genuine **search-and-optimization problem**: given a target vector `(calories, protein, carbs, fat, fiber)`, find the food combination(s) that minimize the distance to it. That's the core engineering challenge this project solves.
 
-### Macro Meal Planner
+> 💡 **In short:** you give MacroMeal the numbers you already know. It works backwards to tell you *what to eat.*
 
-You can directly enter:
+---
 
-* Calories
-* Protein
-* Carbohydrates
-* Fat
-* Fiber
+## ✨ Features
 
-MacroMeal then searches the food database and returns the closest meal combinations.
+| Feature | Description |
+|---|---|
+| 🧮 **Calorie Calculator** | Converts height, weight, activity level, meals/day and goal into daily calorie & macro targets |
+| 🍽️ **Smart Meal Planner** | Runs a combinatorial search across the food database and ranks results by closeness to your target |
+| 🥦 **Food Database** | 190 foods, browsable and filterable by diet type and category |
+| ⭐ **Favorites** | Save meal combinations you like and reuse them instantly |
+| 📆 **Daily Log** | Track what you actually eat, stored locally per device |
+| 🔐 **Role-Based Access** | Separate User and Admin workspaces from a single login flow |
+| 🛠️ **Admin Mode** | Add custom foods to the database — instantly available to the planner |
+| 💾 **Zero Backend** | Runs entirely client-side using `localStorage`, no server or account database required |
 
-Each suggestion shows the foods, quantities and total nutritional values. You can either save the meal or add it to your daily log.
+---
 
-### Food Database
+## 🖼️ App Walkthrough
 
-The database contains foods grouped into categories such as:
+### 1️⃣ Login & Role Selection
 
-* Protein
-* Carbs
-* Fat
-* Dairy
-* Vegetables
+Users choose their workspace — **User** or **Admin** — before entering the planner. This keeps the day-to-day experience simple while still supporting admin tooling inside the same project.
 
-You can search by food name and filter the results by diet type or category.
+<p align="center">
+  <img src="assets/Screenshot 2026-08-25 163926.png" alt="Login screen" width="800"/>
+</p>
 
-### Favorites
+---
 
-Found a meal that works for you?
+### 2️⃣ Landing Page
 
-Save it to Favorites and access it later without generating it again.
+A quick snapshot of what the app offers — database size, match tolerance, and the core search approach — right on the homepage.
 
-Favorites are stored using the browser's `localStorage`.
+<p align="center">
+  <img src="assets/Screenshot 2026-08-25 163938.png" alt="Landing page" width="800"/>
+</p>
 
-### Daily Log
+---
 
-Meals can be added to the daily log directly from the meal suggestions. The log is maintained locally in the browser, so there is no account database behind it.
+### 3️⃣ Calorie Calculator
 
-### Admin Mode
+Body metrics and a goal go in; a daily calorie and macro starting point comes out — the foundation the meal planner builds on.
 
-The project also has a small admin workspace where food items can be added to the database.
+<p align="center">
+  <img src="assets/Screenshot 2026-08-25 163948.png" alt="Calorie calculator" width="800"/>
+</p>
 
-Custom foods are saved locally and become available to the meal planner immediately.
+**Supported goals:** Fat loss · Muscle build · Maintenance · Weight gain
+> ⚠️ Intended as a planning tool, not medical advice.
 
-## Tech Stack
+---
 
-* HTML5
-* CSS3
-* JavaScript
-* JSON
-* Browser LocalStorage
-* Google Fonts
+### 4️⃣ Food Database
 
-There is no backend server in the current version. Food data is loaded from `data/foods.json`, while custom foods, favorites and logs are stored in the browser.
+A clean, dashboard-style browser for all 190 foods — searchable, filterable by diet and category, with an at-a-glance nutrition snapshot.
 
-## Project Structure
+<p align="center">
+  <img src="assets/Screenshot 2026-08-25 163958.png" alt="Food database" width="800"/>
+</p>
 
-```text
+---
+
+## ⚙️ How the Matching Engine Works
+
+The Meal Planner is the heart of the project. Here's the pipeline:
+
+```
+User Targets (kcal, protein, carbs, fat, fiber)
+        │
+        ▼
+Generate candidate food combinations (predefined serving sizes)
+        │
+        ▼
+Compute nutrition totals for each combination
+        │
+        ▼
+Score each combination against the target
+        │
+        ▼
+Rank by closeness → return best matches
+```
+
+**Scoring logic:**
+- ✅ Calorie tolerance: **±5%**
+- ✅ Macro tolerance: **±10%**
+- ✅ Protein, carbs, and fat are **weighted more heavily** than calories and fiber — so the planner optimizes for actual macro accuracy, not just hitting a calorie number.
+
+Rather than dumping every possible combination on the user, MacroMeal surfaces only the closest matches — turning a huge search space into a short, usable list.
+
+---
+
+## 🧰 Tech Stack
+
+<div align="center">
+
+| Layer | Technology |
+|---|---|
+| Structure | HTML5 |
+| Styling | CSS3, Google Fonts |
+| Logic | Vanilla JavaScript |
+| Data | JSON (`data/foods.json`) |
+| Persistence | Browser `localStorage` |
+
+</div>
+
+There is **no backend server** in the current version — this is a deliberate scope decision to focus on the search/matching logic and UI, not infrastructure.
+
+---
+
+## 🚀 Getting Started
+
+Since the app loads its food database via `fetch()`, opening `index.html` directly **will not work** — it needs to be served locally.
+
+### Option 1 — VS Code Live Server
+```bash
+1. Clone the repository
+2. Open the project folder in VS Code
+3. Install the "Live Server" extension
+4. Right-click index.html → "Open with Live Server"
+```
+
+### Option 2 — Python's built-in server
+```bash
+python -m http.server 8000
+```
+Then visit **http://localhost:8000**
+
+### Demo Admin Login
+```
+Username: admin
+Password: admin123
+```
+> This is a frontend-only demo login and is **not** real authentication.
+
+---
+
+## 📁 Project Structure
+
+```
 MacroMeal/
 │
 ├── index.html
@@ -98,7 +175,7 @@ MacroMeal/
 ├── script.js
 │
 ├── data/
-│   └── foods.json
+│   └── foods.json          # Food nutrition database
 │
 ├── assets/
 │   └── macromeal-logo.png
@@ -106,125 +183,65 @@ MacroMeal/
 └── README.md
 ```
 
-## How the meal matching works
+---
 
-The planner creates possible combinations of foods using predefined serving sizes.
+## 💾 Data Storage
 
-For every combination, it calculates:
+| Source | Purpose |
+|---|---|
+| `data/foods.json` | Core food nutrition dataset |
+| `localStorage` | Custom foods added by admin, deleted food IDs, favorite meals, daily logs |
 
-* Calories
-* Protein
-* Carbohydrates
-* Fat
-* Fiber
+> ⚠️ Since data lives in the browser, it is **device-specific** and does not sync across devices.
 
-It then compares those values with the user's targets and assigns a match score.
+---
 
-Protein, carbs and fat have more influence on the score than calories and fiber, which helps the planner prioritize the actual macro requirements rather than only trying to hit the calorie number.
+## 🧱 Current Limitations
 
-The planner finally displays the best matching combinations instead of returning every possible combination.
+- No real user authentication
+- No backend or persistent database
+- User data is stored locally only
+- Admin credentials are hardcoded for demo purposes
+- Nutrition values are estimates
+- Meal combinations are limited to the current food dataset
 
-## Running the project
+These are intentional scope boundaries for a frontend-focused build — not oversights — and are the natural next steps for a v2.
 
-Since the app loads the food database using `fetch()`, it should be opened through a local server rather than directly opening the HTML file.
+---
 
-### Option 1 — VS Code Live Server
+## 🗺️ Roadmap
 
-1. Clone the repository.
-2. Open the project in VS Code.
-3. Install the Live Server extension.
-4. Right-click `index.html`.
-5. Select **Open with Live Server**.
+- [ ] Backend + proper database
+- [ ] Real user accounts and authentication
+- [ ] Cloud-synced meal history
+- [ ] Improved recommendation algorithm
+- [ ] Richer nutrition data (micronutrients)
+- [ ] Weekly meal planning
+- [ ] Auto-generated shopping lists
+- [ ] Custom calorie/macro presets
+- [ ] Mobile-first redesign
+- [ ] Third-party nutrition API integration
 
-### Option 2 — Python
+---
 
-If Python is installed:
+## 💭 Why This Project
 
-```bash
-python -m http.server 8000
-```
+Calorie calculators are everywhere. What's missing is the *next step* — turning a target number into an actual plate of food.
 
-Then open:
+MacroMeal reframes nutrition planning as a **search and optimization problem**: given a target vector, find the closest achievable combination from a real dataset. Building that pipeline — from candidate generation, to scoring, to ranking, to a usable UI — was the real goal of this project, alongside a from-scratch frontend built without any framework.
 
-```text
-http://localhost:8000
-```
+---
 
-## Demo Admin Login
+## ⚕️ Disclaimer
 
-The current project includes a demo admin login:
+MacroMeal is intended for **general nutrition planning and educational purposes only**. All calorie and macro recommendations are estimates and should not be treated as medical or dietary advice.
 
-```text
-Username: admin
-Password: admin123
-```
+---
 
-This is only a frontend demo login and should not be treated as real authentication.
+## 👥 Authors
 
-## Data Storage
+**Akash Anand** · **Bhavya Singla** · **Aayush Madan**
 
-MacroMeal currently uses two sources of data:
+*Built as a personal/student project while exploring frontend development, JavaScript logic, and nutrition-based recommendation systems.*
 
-**Food database**
-
-```text
-data/foods.json
-```
-
-**Browser storage**
-
-Used for things such as:
-
-* Custom food items
-* Deleted food IDs
-* Favorite meals
-* Daily meal logs
-
-This means the saved data belongs to the browser/device being used and is not synchronized between different devices.
-
-## Current Limitations
-
-This is a frontend project, so there are a few limitations:
-
-* No real user authentication
-* No backend/database
-* User data is stored locally
-* Admin credentials are hardcoded for demonstration
-* Nutrition calculations are estimates
-* Meal combinations depend on the available food dataset
-
-These are areas that could be improved in a future version.
-
-## Possible Improvements
-
-Some things I would like to add later:
-
-* Backend with a proper database
-* Real user accounts
-* Cloud-synced meal history
-* Better meal recommendation logic
-* More detailed nutrition information
-* Weekly meal planning
-* Shopping list generation
-* Custom calorie and macro presets
-* Mobile-first improvements
-* Nutrition API integration
-
-## Why I built this
-
-I wanted to build something that was more useful than a basic calorie calculator.
-
-The main idea was to take the numbers a person already knows — calories and macros — and work backwards to find actual food combinations that fit those numbers.
-
-That turned the project into more of a search and optimization problem instead of just a collection of forms and calculations.
-
-## Disclaimer
-
-MacroMeal is intended for general nutrition planning and educational purposes. The calorie and macro recommendations are estimates and should not be considered medical or dietary advice.
-
-## Author
-**Akash Anand**
-**Bhavya Singla**
-**Aayush Madan**
-
-Built as a personal/student project while exploring frontend development, JavaScript logic and nutrition-based recommendation systems.
+</div>
