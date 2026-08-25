@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=2">
 </head>
+
 <body>
 
     <div id="login-page" class="login-page">
@@ -24,18 +25,57 @@
                 <button type="button" class="role-option active" data-role="user">User</button>
                 <button type="button" class="role-option" data-role="admin">Admin</button>
             </div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="login-username">Username</label>
-                    <input type="text" id="login-username" autocomplete="username" required placeholder="Enter your username">
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" autocomplete="current-password" required placeholder="Enter your password">
-                </div>
-                <button type="submit">Continue as <span id="selected-role-label">User</span></button>
-                <p id="login-error" class="error-message" role="alert"></p>
-            </form>
+            <div id="login-view">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" autocomplete="username" required
+                            placeholder="Enter your username">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" autocomplete="current-password" required
+                            placeholder="Enter your password">
+                    </div>
+
+                    <button type="submit">Continue as <span id="selected-role-label">User</span></button>
+                    <p id="login-error" class="error-message" role="alert"></p>
+                </form>
+
+                <p class="auth-switch">
+                    New user?
+                    <button type="button" id="show-signup">Create an account</button>
+                </p>
+            </div>
+
+            <div id="signup-view" style="display: none;">
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="signup-username">Username</label>
+                        <input type="text" id="signup-username" required placeholder="Choose a username">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required placeholder="Create a password">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-confirm-password">Confirm Password</label>
+                        <input type="password" id="signup-confirm-password" required
+                            placeholder="Confirm your password">
+                    </div>
+
+                    <button type="submit">Create Account</button>
+                    <p id="signup-error" class="error-message" role="alert"></p>
+                </form>
+
+                <p class="auth-switch">
+                    Already have an account?
+                    <button type="button" id="show-login">Back to Login</button>
+                </p>
+            </div>
             <p class="login-note">Demo admin login: <strong>admin</strong> / <strong>admin123</strong></p>
         </div>
     </div>
@@ -51,6 +91,8 @@
             <button class="nav-tab admin-only" data-tab="admin">Admin</button>
             <button class="nav-tab" data-tab="favorites">Favorites</button>
             <button class="nav-tab" data-tab="log">Daily Log</button>
+
+            <button class="nav-tab" data-tab="profile" id="profile-icon-btn" style="margin-left:auto;font-size:1.1rem;" title="Profile">👤</button>
         </div>
     </nav>
 
@@ -118,18 +160,21 @@
                 <div class="calculator-intro">
                     <span class="section-kicker">START WITH YOUR NUMBERS</span>
                     <h2>Find your daily targets</h2>
-                    <p>Enter your body measurements and goal. We will estimate calories and macros to help you build a meal plan.</p>
+                    <p>Enter your body measurements and goal. We will estimate calories and macros to help you build a
+                        meal plan.</p>
                 </div>
                 <div class="calculator-layout">
                     <form id="calorie-form" class="calculator-form">
                         <div class="calculator-form-grid">
                             <div class="form-group">
-                                <label for="height">Height (metres)</label>
-                                <input type="number" id="height" name="height" min="1" max="2.5" step="0.01" placeholder="e.g. 1.75" required>
+                                <label for="height">Height (cm)</label>
+                                <input type="number" id="height" name="height" min="100" max="250" step="1"
+                                    placeholder="e.g. 175" required>
                             </div>
                             <div class="form-group">
                                 <label for="weight">Weight (kg)</label>
-                                <input type="number" id="weight" name="weight" min="20" max="300" step="0.1" placeholder="e.g. 70" required>
+                                <input type="number" id="weight" name="weight" min="20" max="150" step="0.1"
+                                    placeholder="e.g. 70" required>
                             </div>
                         </div>
                         <div class="form-group">
@@ -162,10 +207,18 @@
                         </div>
                         <fieldset class="goal-options">
                             <legend>Your goal</legend>
-                            <label class="goal-option"><input type="radio" name="calorieGoal" value="fat-loss" checked><span><strong>Fat loss</strong><small>Gradual calorie deficit</small></span></label>
-                            <label class="goal-option"><input type="radio" name="calorieGoal" value="muscle-build"><span><strong>Muscle build</strong><small>Fuel training and growth</small></span></label>
-                            <label class="goal-option"><input type="radio" name="calorieGoal" value="maintenance"><span><strong>Maintenance</strong><small>Stay around your current weight</small></span></label>
-                            <label class="goal-option"><input type="radio" name="calorieGoal" value="weight-gain"><span><strong>Weight gain</strong><small>Build a steady surplus</small></span></label>
+                            <label class="goal-option"><input type="radio" name="calorieGoal" value="fat-loss"
+                                    checked><span><strong>Fat loss</strong><small>Gradual calorie
+                                        deficit</small></span></label>
+                            <label class="goal-option"><input type="radio" name="calorieGoal"
+                                    value="muscle-build"><span><strong>Muscle build</strong><small>Fuel training and
+                                        growth</small></span></label>
+                            <label class="goal-option"><input type="radio" name="calorieGoal"
+                                    value="maintenance"><span><strong>Maintenance</strong><small>Stay around your
+                                        current weight</small></span></label>
+                            <label class="goal-option"><input type="radio" name="calorieGoal"
+                                    value="weight-gain"><span><strong>Weight gain</strong><small>Build a steady
+                                        surplus</small></span></label>
                         </fieldset>
                         <button type="submit">Calculate my targets</button>
                         <p id="calorie-form-error" class="error-message" role="alert"></p>
@@ -178,7 +231,8 @@
                         </div>
                     </div>
                 </div>
-                <p class="calculator-note">These are estimates for planning purposes, not medical advice. Your actual needs may vary.</p>
+                <p class="calculator-note">These are estimates for planning purposes, not medical advice. Your actual
+                    needs may vary.</p>
             </section>
         </main>
     </div>
@@ -189,43 +243,56 @@
             <section id="macro-form-section">
                 <h2>Set Your Targets</h2>
                 <form id="macro-form">
+
                     <div class="form-group">
                         <label for="calories">Calories (kcal)</label>
-                        <input type="number" id="calories" name="calories" min="0" placeholder="e.g. 500">
+                        <input type="number" id="calories" name="calories" min="1" placeholder="e.g. 500" required>
                     </div>
 
                     <div class="form-group">
                         <label for="protein">Protein (g)</label>
-                        <input type="number" id="protein" name="protein" min="0" placeholder="e.g. 30">
+                        <input type="number" id="protein" name="protein" min="1" placeholder="e.g. 30" required>
                     </div>
 
                     <div class="form-group">
                         <label for="carbs">Carbs (g)</label>
-                        <input type="number" id="carbs" name="carbs" min="0" placeholder="e.g. 50">
+                        <input type="number" id="carbs" name="carbs" min="1" placeholder="e.g. 50" required>
                     </div>
 
                     <div class="form-group">
                         <label for="fat">Fat (g)</label>
-                        <input type="number" id="fat" name="fat" min="0" placeholder="e.g. 20">
+                        <input type="number" id="fat" name="fat" min="1" placeholder="e.g. 20" required>
                     </div>
 
                     <div class="form-group">
                         <label for="fiber">Fiber (g)</label>
-                        <input type="number" id="fiber" name="fiber" min="0" placeholder="e.g. 28">
+                        <input type="number" id="fiber" name="fiber" min="1" placeholder="e.g. 28" required>
                     </div>
 
                     <div class="form-group">
                         <label>Dietary Preference</label>
+
                         <div class="radio-group">
-                            <label><input type="radio" name="dietPreference" value="veg" checked> Vegetarian</label>
-                            <label><input type="radio" name="dietPreference" value="non-veg"> Non-Vegetarian</label>
+                            <label>
+                                <input type="radio" name="dietPreference" value="veg" checked>
+                                Vegetarian
+                            </label>
+
+                            <label>
+                                <input type="radio" name="dietPreference" value="non-veg">
+                                Non-Vegetarian
+                            </label>
                         </div>
                     </div>
 
                     <button type="submit">Find Meals</button>
+
                 </form>
+
                 <p id="form-error" class="error-message"></p>
-                <div id="consistency-warning" class="warning-message" style="display: none;"></div>
+
+                <div id="consistency-warning" class="warning-message" style="display: none;">
+                </div>
             </section>
 
             <section id="results-section">
@@ -281,9 +348,12 @@
                     <div class="database-filters">
                         <div class="diet-filter" role="group" aria-label="Filter foods by diet">
                             <span class="filter-label">Diet</span>
-                            <button type="button" class="diet-filter-btn active" data-diet-filter="all">All foods</button>
-                            <button type="button" class="diet-filter-btn" data-diet-filter="veg"><span aria-hidden="true">●</span> Vegetarian</button>
-                            <button type="button" class="diet-filter-btn" data-diet-filter="non-veg"><span aria-hidden="true">◆</span> Non-vegetarian</button>
+                            <button type="button" class="diet-filter-btn active" data-diet-filter="all">All
+                                foods</button>
+                            <button type="button" class="diet-filter-btn" data-diet-filter="veg"><span
+                                    aria-hidden="true">●</span> Vegetarian</button>
+                            <button type="button" class="diet-filter-btn" data-diet-filter="non-veg"><span
+                                    aria-hidden="true">◆</span> Non-vegetarian</button>
                         </div>
                         <div class="category-filter">
                             <label class="filter-label" for="category-filter">Category</label>
@@ -315,18 +385,35 @@
                     </div>
                     <span class="count-badge" id="custom-food-count">0 custom</span>
                 </div>
-                <p class="section-description">Nutrition values are saved on this device and become available in the meal planner.</p>
+                <p class="section-description">Nutrition values are saved on this device and become available in the
+                    meal planner.</p>
                 <form id="food-form" class="admin-form">
-                    <div class="form-group"><label for="food-name">Food name</label><input type="text" id="food-name" name="name" required placeholder="e.g. Tempeh, cooked"></div>
+                    <div class="form-group"><label for="food-name">Food name</label><input type="text" id="food-name"
+                            name="name" required placeholder="e.g. Tempeh, cooked"></div>
                     <div class="admin-form-grid">
-                        <div class="form-group"><label for="food-category">Category</label><select id="food-category" name="category"><option>Protein</option><option>Carbs</option><option>Fat</option><option>Dairy</option><option>Vegetable</option></select></div>
-                        <div class="form-group"><label for="food-diet">Diet type</label><select id="food-diet" name="dietType"><option value="veg">Vegetarian</option><option value="non-veg">Non-vegetarian</option></select></div>
+                        <div class="form-group"><label for="food-category">Category</label><select id="food-category"
+                                name="category">
+                                <option>Protein</option>
+                                <option>Carbs</option>
+                                <option>Fat</option>
+                                <option>Dairy</option>
+                                <option>Vegetable</option>
+                            </select></div>
+                        <div class="form-group"><label for="food-diet">Diet type</label><select id="food-diet"
+                                name="dietType">
+                                <option value="veg">Vegetarian</option>
+                                <option value="non-veg">Non-vegetarian</option>
+                            </select></div>
                     </div>
                     <div class="admin-form-grid nutrition-grid">
-                        <div class="form-group"><label for="food-calories">Calories / 100g</label><input type="number" id="food-calories" name="calories" min="0" step="0.1" required></div>
-                        <div class="form-group"><label for="food-protein">Protein (g)</label><input type="number" id="food-protein" name="protein" min="0" step="0.1" required></div>
-                        <div class="form-group"><label for="food-carbs">Carbs (g)</label><input type="number" id="food-carbs" name="carbs" min="0" step="0.1" required></div>
-                        <div class="form-group"><label for="food-fat">Fat (g)</label><input type="number" id="food-fat" name="fat" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-calories">Calories / 100g</label><input type="number"
+                                id="food-calories" name="calories" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-protein">Protein (g)</label><input type="number"
+                                id="food-protein" name="protein" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-carbs">Carbs (g)</label><input type="number"
+                                id="food-carbs" name="carbs" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-fat">Fat (g)</label><input type="number" id="food-fat"
+                                name="fat" min="0" step="0.1" required></div>
                     </div>
                     <button type="submit">Add food to database</button>
                     <p id="food-form-message" class="form-message" role="status"></p>
@@ -334,7 +421,9 @@
             </section>
             <section>
                 <h2>Manage Food Items</h2>
-                <div id="custom-foods-container"><p class="empty-message">Food items will appear here after loading.</p></div>
+                <div id="custom-foods-container">
+                    <p class="empty-message">Food items will appear here after loading.</p>
+                </div>
             </section>
             <section class="restore-database-box">
                 <div>
@@ -360,7 +449,9 @@
         </main>
     </div>
 
-    <!-- ============ DAILY LOG TAB ============ -->
+
+
+        <!-- ============ DAILY LOG TAB ============ -->
     <div class="tab-page app-shell" id="tab-log">
         <main>
             <section id="daily-log-section">
@@ -372,6 +463,59 @@
             </section>
         </main>
     </div>
+
+    <!-- ============ PROFILE TAB ============ -->
+    <div class="tab-page app-shell" id="tab-profile">
+    <main>
+        <section id="profile-section">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profile-avatar">
+    <svg viewBox="0 0 24 24" fill="currentColor" width="36" height="36">
+        <path d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zm0 2.5c-3.3 0-9.8 1.6-9.8 4.9v2.4h19.6v-2.4c0-3.3-6.5-4.9-9.8-4.9z"/>
+    </svg>
+</div>
+                <div class="profile-header-info">
+                    <h2 id="profile-username">Username</h2>
+                    <div class="profile-badges">
+                        <span class="goal-result-badge" id="profile-role-badge">Role</span>
+                        <span class="profile-status"><span class="context-dot"></span>Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-block">
+                <span class="section-kicker">ACCOUNT INFORMATION</span>
+                <div class="profile-info-grid">
+                    <div class="profile-info-row"><span>Username</span><strong id="profile-info-username">—</strong></div>
+                    <div class="profile-info-row"><span>Role</span><strong id="profile-info-role">—</strong></div>
+                    <div class="profile-info-row"><span>Status</span><strong>Active</strong></div>
+                </div>
+            </div>
+
+            <div class="profile-block">
+                <span class="section-kicker">ACTIVITY</span>
+                <div class="database-stats profile-stats">
+                    <div class="database-stat database-stat-total">
+                        <span class="database-stat-icon" aria-hidden="true">⭐</span>
+                        <span><strong id="profile-favorites-count">0</strong><small>Favorites</small></span>
+                    </div>
+                    <div class="database-stat database-stat-veg">
+                        <span class="database-stat-icon" aria-hidden="true">📋</span>
+                        <span><strong id="profile-log-count">0</strong><small>Meals Logged</small></span>
+                    </div>
+                    <div class="database-stat database-stat-nonveg">
+                        <span class="database-stat-icon" aria-hidden="true">🥗</span>
+                        <span><strong id="profile-custom-count">0</strong><small>Custom Foods</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="logout-btn" class="logout-btn">Logout</button>
+        </section>
+    </main>
+</div>
+
+
 
     <script src="script.js?v=8"></script>
 </body>
