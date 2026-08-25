@@ -4,6 +4,19 @@ MacroMeal is a simple web-based nutrition planner that helps you build meals aro
 
 Instead of manually trying different food combinations, you enter your target calories, protein, carbs, fats and fiber, and the app searches through the available foods to find combinations that are close to your requirements.
 
+## App Preview
+
+<p align="center">
+  <img src="assets/logo-preview-white.jpg" alt="MacroMeal logo preview" width="900" />
+</p>
+
+<p align="center">
+  <img src="assets/macromeal-logo-clean.png" alt="MacroMeal clean logo" width="420" />
+  <img src="assets/macromeal-logo.png" alt="MacroMeal logo" width="420" />
+</p>
+
+These visuals show the brand direction and the app's nutrition-focused identity, giving a quick sense of the project before you explore the features and functionality.
+
 ## What it does
 
 * Calculates estimated daily calorie and macro targets
