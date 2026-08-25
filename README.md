@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="screenshots/login.png" alt="MacroMeal logo" width="140"/>
-
 # 🥗 MacroMeal
 
 ### Hit your macros. Effortlessly.
@@ -55,7 +53,7 @@ That single design decision turned this from a basic calculator into a genuine *
 Users choose their workspace — **User** or **Admin** — before entering the planner. This keeps the day-to-day experience simple while still supporting admin tooling inside the same project.
 
 <p align="center">
-  <img src="screenshots/login.png" alt="Login and role selection screen" width="480"/>
+  <img src="assets/Screenshot 2026-08-25 163926.png" alt="Login screen" width="800"/>
 </p>
 
 ---
@@ -65,7 +63,7 @@ Users choose their workspace — **User** or **Admin** — before entering the p
 A quick snapshot of what the app offers — database size, match tolerance, and the core search approach — right on the homepage.
 
 <p align="center">
-  <img src="screenshots/home.png" alt="MacroMeal homepage" width="800"/>
+  <img src="assets/Screenshot 2026-08-25 163938.png" alt="Landing page" width="800"/>
 </p>
 
 ---
@@ -75,7 +73,7 @@ A quick snapshot of what the app offers — database size, match tolerance, and 
 Body metrics and a goal go in; a daily calorie and macro starting point comes out — the foundation the meal planner builds on.
 
 <p align="center">
-  <img src="screenshots/calorie-calculator.png" alt="Calorie calculator form" width="700"/>
+  <img src="assets/Screenshot 2026-08-25 163948.png" alt="Calorie calculator" width="800"/>
 </p>
 
 **Supported goals:** Fat loss · Muscle build · Maintenance · Weight gain
@@ -88,7 +86,7 @@ Body metrics and a goal go in; a daily calorie and macro starting point comes ou
 A clean, dashboard-style browser for all 190 foods — searchable, filterable by diet and category, with an at-a-glance nutrition snapshot.
 
 <p align="center">
-  <img src="screenshots/food-database.png" alt="Food database dashboard" width="700"/>
+  <img src="assets/Screenshot 2026-08-25 163958.png" alt="Food database" width="800"/>
 </p>
 
 ---
