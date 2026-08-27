@@ -324,7 +324,7 @@ function getServingSizes(food) {
         if (name.includes("lentil") || name.includes("bean") || name.includes("chickpea") || name.includes("dal") || name.includes("edamame")) {
             return [100, 125, 150, 175, 200, 250];
         }
-        return [100, 125, 150, 175, 200, 225, 250];
+       return [100, 125, 150, 175, 200, 225, 250, 275, 300];
     }
 
     if (food.category === "Carbs") {
@@ -337,18 +337,18 @@ function getServingSizes(food) {
         if (name.includes("banana") || name.includes("apple") || name.includes("orange") || name.includes("mango") || name.includes("grape")) {
             return [75, 100, 125, 150, 200];
         }
-        return [100, 125, 150, 175, 200, 250, 300];
-    }
+        return [100, 125, 150, 175, 200, 250, 300, 350, 400, 450, 500]; 
+     }
 
     if (food.category === "Fat") {
-        if (name.includes("oil") || name.includes("ghee") || name.includes("butter")) {
-            return [5, 10, 15, 20, 25];
-        }
-        if (name.includes("nut") || name.includes("almond") || name.includes("peanut") || name.includes("seed") || name.includes("tahini")) {
-            return [15, 20, 25, 30, 40];
-        }
-        return [25, 50, 75, 100];
+    if (name.includes("oil") || name.includes("ghee") || name.includes("butter")) {
+        return [5, 10, 15, 20, 25, 30, 35];
     }
+    if (name.includes("nut") || name.includes("almond") || name.includes("peanut") || name.includes("seed") || name.includes("tahini")) {
+        return [15, 20, 25, 30, 40, 50, 60];
+    }
+    return [25, 50, 75, 100, 125];
+}
 
     if (food.category === "Dairy") {
         return [100, 125, 150, 175, 200, 250];
@@ -458,10 +458,77 @@ function calculateMatchScore(combinationTotal, target) {
 
     return matchScore;
 }
-
 function findBestMeals(foods, target, dietPreference) {
-    // Use one capped closest-match search so the expanded database cannot freeze the page.
-    return findBalancedMealSuggestions(target, dietPreference, true).slice(0, 5);
+    const allSuggestions = findBalancedMealSuggestions(target, dietPreference, true);
+    return selectDiverseMeals(allSuggestions, 5);
+}
+
+function selectDiverseMeals(suggestions, count) {
+    const selected = [];
+    const usedFoodIds = new Set();
+    let previousProteinId = null;
+
+    while (selected.length < count && selected.length < suggestions.length) {
+        let bestSuggestion = null;
+        let bestScore = -Infinity;
+
+        suggestions.forEach(function (suggestion) {
+            if (selected.indexOf(suggestion) !== -1) {
+                return;
+            }
+
+            const proteinItem = suggestion.combination.items.find(function (item) {
+                return item.food.category === "Protein";
+            });
+            const proteinId = proteinItem ? String(proteinItem.food.id) : null;
+
+            let repetitionPenalty = 0;
+            if (proteinId && proteinId === previousProteinId) {
+                repetitionPenalty += 20;
+            }
+
+            suggestion.combination.items.forEach(function (item) {
+                const foodId = String(item.food.id);
+                if (usedFoodIds.has(foodId)) {
+                    if (item.food.category === "Protein") {
+                        repetitionPenalty += 15;
+                    } else if (item.food.category === "Carbs") {
+                        repetitionPenalty += 8;
+                    } else if (item.food.category === "Fat") {
+                        repetitionPenalty += 5;
+                    } else {
+                        repetitionPenalty += 3;
+                    }
+                }
+            });
+
+            const adjustedScore = suggestion.score - repetitionPenalty;
+
+            if (adjustedScore > bestScore) {
+                bestScore = adjustedScore;
+                bestSuggestion = suggestion;
+            }
+        });
+
+        if (!bestSuggestion) {
+            break;
+        }
+
+        selected.push(bestSuggestion);
+
+        bestSuggestion.combination.items.forEach(function (item) {
+            usedFoodIds.add(String(item.food.id));
+        });
+
+        const selectedProtein = bestSuggestion.combination.items.find(function (item) {
+            return item.food.category === "Protein";
+        });
+        if (selectedProtein) {
+            previousProteinId = String(selectedProtein.food.id);
+        }
+    }
+
+    return selected;
 }
 
 function displayResults(results) {
@@ -507,8 +574,28 @@ function displayResults(results) {
     });
 }
 
+function getMealSignature(items) {
+    return items
+        .map(function (item) {
+            const name = item.food ? item.food.name : item.name;
+            return name + "-" + item.quantity;
+        })
+        .sort()
+        .join("|");
+}
+
 function saveFavorite(mealTotal) {
     const favorites = getFavorites();
+
+    const newSignature = getMealSignature(mealTotal.items);
+
+    const alreadySaved = favorites.some(function (favorite) {
+        return getMealSignature(favorite.items) === newSignature;
+    });
+
+    if (alreadySaved) {
+        return false; // already in favorites, don't add a duplicate
+    }
 
     const favoriteMeal = {
         id: Date.now(), // unique id based on timestamp
@@ -524,6 +611,7 @@ function saveFavorite(mealTotal) {
 
     favorites.push(favoriteMeal);
     localStorage.setItem("favorites", JSON.stringify(favorites));
+    return true;
 }
 
 function getFavorites() {
@@ -951,15 +1039,20 @@ dietFilterButtons.forEach(function (button) {
 });
 
 resultsContainer.addEventListener("click", function (event) {
-    if (event.target.classList.contains("save-favorite-btn")) {
+        if (event.target.classList.contains("save-favorite-btn")) {
         const card = event.target.closest(".meal-card");
         const cardIndex = Array.from(resultsContainer.children).indexOf(card);
         const mealToSave = window.currentResults[cardIndex].combination;
 
-        saveFavorite(mealToSave);
+        const wasSaved = saveFavorite(mealToSave);
         displayFavorites();
         updateProfileStats();
-        alert("Meal saved to favorites!");
+
+        if (wasSaved) {
+            alert("Meal saved to favorites!");
+        } else {
+            alert("This meal is already in your favorites.");
+        }
     }
 
     if (event.target.classList.contains("log-meal-btn")) {
@@ -1079,15 +1172,15 @@ function getCalculatorMealFoods(dietPreference) {
     const eligibleFoods = filterByDiet(foodData, dietPreference);
     const preferredFoods = eligibleFoods.filter(function (food) {
         return food.category === "Protein";
-    }).slice(0, 4).concat(eligibleFoods.filter(function (food) {
+    }).slice(0, 8).concat(eligibleFoods.filter(function (food) {
         return food.category === "Carbs";
-    }).slice(0, 5), eligibleFoods.filter(function (food) {
+    }).slice(0, 8), eligibleFoods.filter(function (food) {
         return food.category === "Fat";
-    }).slice(0, 4), eligibleFoods.filter(function (food) {
+    }).slice(0, 8), eligibleFoods.filter(function (food) {
         return food.category === "Dairy";
-    }).slice(0, 2), eligibleFoods.filter(function (food) {
+    }).slice(0, 7), eligibleFoods.filter(function (food) {
         return food.category === "Vegetable";
-    }).slice(0, 4));
+    }).slice(0, 7));
 
     return preferredFoods.filter(function (food, index, foods) {
         return foods.findIndex(function (candidate) {
@@ -1095,20 +1188,40 @@ function getCalculatorMealFoods(dietPreference) {
         }) === index;
     });
 }
+function scaleCombinationToTarget(items, target) {
+    const currentTotal = calculateCombinationTotal(items);
+
+    if (currentTotal.totalCalories <= 0) {
+        return items;
+    }
+
+    let scaleFactor = target.calories / currentTotal.totalCalories;
+
+    // Keep scaling within a sane range so items don't become unrealistic
+    scaleFactor = Math.max(0.5, Math.min(scaleFactor, 2.5));
+
+    const scaledItems = items.map(function (item) {
+        const rawQuantity = item.quantity * scaleFactor;
+        const roundedQuantity = Math.max(5, Math.round(rawQuantity / 5) * 5);
+        return { food: item.food, quantity: roundedQuantity };
+    });
+
+    return scaledItems;
+}
 function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest) {
     const foods = getCalculatorMealFoods(dietPreference);
     const proteins = foods
         .filter(food => food.category === "Protein")
-        .slice(0, 8);
+        .slice(0, 7);
     const carbs = foods
         .filter(food => food.category === "Carbs")
-        .slice(0, 4);
+        .slice(0, 5);
     const fats = foods
         .filter(food => food.category === "Fat")
-        .slice(0, 3);
+        .slice(0, 4);
     const vegetables = foods
         .filter(food => food.category === "Vegetable")
-        .slice(0, 3);
+        .slice(0, 4);
     const fiberSources = foodData
         .filter(function (food) {
             const name = food.name.toLowerCase();
@@ -1133,8 +1246,23 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
     const seen = new Set();
 
     function addSuggestion(items) {
-        const combinationTotal = calculateCombinationTotal(items);
+        if (suggestions.length >= 500) {
+        return; // safety cap — stop searching once we have enough candidates
+    }
+    
+        const originalTotal = calculateCombinationTotal(items);
+    const originalScore = calculateMatchScore(originalTotal, mealTarget);
 
+    // Also try scaling quantities up/down toward the target
+    const scaledItems = scaleCombinationToTarget(items, mealTarget);
+    const scaledTotal = calculateCombinationTotal(scaledItems);
+    const scaledScore = calculateMatchScore(scaledTotal, mealTarget);
+
+    // Keep whichever version scores better
+    const useScaled = scaledScore > originalScore;
+    const finalItems = useScaled ? scaledItems : items;
+    const combinationTotal = useScaled ? scaledTotal : originalTotal;
+    
         const signature = items
             .map(item => String(item.food.id))
             .sort()
@@ -1153,10 +1281,7 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
             return;
         }
 
-        const score = calculateMatchScore(
-            combinationTotal,
-            mealTarget
-        );
+                const score = useScaled ? scaledScore : originalScore;
 
         if (includeClosest || score >= MINIMUM_MATCH_SCORE) {
             suggestions.push({
@@ -1165,20 +1290,20 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
             });
         }
     }
+    
     function fastServingSizes(food) {
-        const sizes = getServingSizes(food);
+    const sizes = getServingSizes(food);
 
-        if (sizes.length <= 3) {
-            return sizes;
-        }
-
-        return [
-            sizes[0],
-            sizes[Math.floor(sizes.length / 2)],
-            sizes[sizes.length - 1]
-        ];
+    if (sizes.length <= 3) {
+        return sizes;
     }
 
+    return [
+        sizes[0],
+        sizes[Math.floor(sizes.length / 2)],
+        sizes[sizes.length - 1]
+    ];
+}
 
     proteins.forEach(function (protein) {
 
@@ -1280,8 +1405,8 @@ function findBalancedMealSuggestions(mealTarget, dietPreference, includeClosest)
     }
 
     return suggestions;
-}
 
+}
 function displayCalculatorMealSuggestions(mealTarget, dailyTarget, mealsPerDay, dietPreference) {
     const allSuggestions = findBalancedMealSuggestions(mealTarget, dietPreference, true);
     const usedFoodIds = new Set();
@@ -1335,13 +1460,13 @@ function displayCalculatorMealSuggestions(mealTarget, dailyTarget, mealsPerDay, 
                 if (usedFoodIds.has(foodId)) {
 
                     if (item.food.category === "Protein") {
-                        repetitionPenalty += 8;
+                        repetitionPenalty += 12;
                     } else if (item.food.category === "Carbs") {
-                        repetitionPenalty += 5;
+                        repetitionPenalty += 8;
                     } else if (item.food.category === "Fat") {
-                        repetitionPenalty += 4;
+                        repetitionPenalty += 6;
                     } else {
-                        repetitionPenalty += 2;
+                        repetitionPenalty += 4;
                     }
                 }
             });
