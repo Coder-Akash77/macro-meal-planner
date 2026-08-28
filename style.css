@@ -42,7 +42,17 @@ body {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: radial-gradient(circle at top right, #d9f5e4 0, transparent 38%), var(--bg);
+  position: relative;
+  isolation: isolate;
+  background: url('assets/backgroundimages.jpg') center / cover no-repeat;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(244, 247, 245, 0.72);
 }
 
 .login-page.hidden {
