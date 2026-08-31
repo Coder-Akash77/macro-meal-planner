@@ -1758,5 +1758,5 @@ foodListContainer.addEventListener("click", function (event) {
 
 document.getElementById("logout-btn").addEventListener("click", function () {
     localStorage.removeItem(LOGIN_KEY);
-    window.location.href = "index.html";
+    location.reload();
 });
