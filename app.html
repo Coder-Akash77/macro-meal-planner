@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacroMeal</title>
+    <link rel="icon" type="image/png" href="assets/macromeal-logo-clean.png">
+    <link rel="apple-touch-icon" href="assets/macromeal-logo-clean.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+</head>
+
+<body>
+
+    <div id="login-page" class="login-page">
+        <div class="login-panel">
+            <div class="login-brand"><img src="assets/macromeal-logo-clean.png" alt="MacroMeal logo"></div>
+            <p class="eyebrow">Macro nutrition planner</p>
+            <h1>Welcome </h1>
+            <p class="login-intro">Choose your workspace to continue.</p>
+            <div class="role-switcher" role="tablist" aria-label="Choose account type">
+                <button type="button" class="role-option active" data-role="user">User</button>
+                <button type="button" class="role-option" data-role="admin">Admin</button>
+            </div>
+            <div id="login-view">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" autocomplete="username" required
+                            placeholder="Enter your username">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" autocomplete="current-password" required
+                            placeholder="Enter your password">
+                    </div>
+
+                    <button type="submit">Continue as <span id="selected-role-label">User</span></button>
+                    <p id="login-error" class="error-message" role="alert"></p>
+                </form>
+
+                <p class="auth-switch">
+                    New user?
+                    <button type="button" id="show-signup">Create an account</button>
+                </p>
+            </div>
+
+            <div id="signup-view" style="display: none;">
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="signup-username">Username</label>
+                        <input type="text" id="signup-username" required placeholder="Choose a username">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" required placeholder="Enter your email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required placeholder="Create a password">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-confirm-password">Confirm Password</label>
+                        <input type="password" id="signup-confirm-password" required
+                            placeholder="Confirm your password">
+                    </div>
+
+                    <button type="submit">Create Account</button>
+                    <p id="signup-error" class="error-message" role="alert"></p>
+                </form>
+
+                <p class="auth-switch">
+                    Already have an account?
+                    <button type="button" id="show-login">Back to Login</button>
+                </p>
+            </div>
+            <p class="login-note">Demo admin login: <strong>admin</strong> / <strong>admin123</strong></p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar app-shell">
+        <div class="nav-logo"><img src="assets/macromeal-logo-clean.png" alt="MacroMeal logo"></div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="home">Home</button>
+            <button class="nav-tab" data-tab="calculator">Calorie Calculator</button>
+            <button class="nav-tab" data-tab="planner">Meal Planner</button>
+            <button class="nav-tab" data-tab="database">Food Database</button>
+            <button class="nav-tab admin-only" data-tab="admin">Admin</button>
+            <button class="nav-tab" data-tab="favorites">Favorites</button>
+            <button class="nav-tab" data-tab="log">Daily Log</button>
+
+            <button class="nav-tab" data-tab="profile" id="profile-icon-btn" style="margin-left:auto;font-size:1.1rem;"
+                title="Profile">👤</button>
+        </div>
+    </nav>
+
+    <!-- ============ HOME TAB ============ -->
+    <div class="tab-page active app-shell" id="tab-home">
+        <section class="hero">
+            <div class="hero-text">
+                <h1>Hit your macros. <span class="accent-text">Effortlessly.</span></h1>
+                <p>MacroMeal Planner searches real food combinations and ranks them by how closely they match your
+                    calorie, protein, carb, and fat targets — no spreadsheets, no guesswork.</p>
+                <div class="hero-buttons">
+                    <button class="btn-primary" id="go-to-planner">Generate a Meal Plan</button>
+                    <button class="btn-outline" id="go-to-database">Browse Food Database</button>
+                </div>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <span class="stat-icon">🔥</span>
+                    <div>
+                        <div class="stat-value" id="stat-food-count">—</div>
+                        <div class="stat-label">Foods in Database</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">🎯</span>
+                    <div>
+                        <div class="stat-value">±10%</div>
+                        <div class="stat-label">Match Tolerance</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">⚡</span>
+                    <div>
+                        <div class="stat-value">Combinatorial</div>
+                        <div class="stat-label">Search Algorithm</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="feature-cards">
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3>Smart Search</h3>
+                <p>Generates real food combinations and scores each one against your target — no hardcoded
+                    results.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🥗</span>
+                <h3>Full Food Database</h3>
+                <p>Search and filter a curated, USDA-sourced database of proteins, carbs, fats, and vegetables.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">⭐</span>
+                <h3>Favorites & Logging</h3>
+                <p>Save favorite combinations and track your daily meals — all stored locally on your device.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============ CALORIE CALCULATOR TAB ============ -->
+    <div class="tab-page app-shell" id="tab-calculator">
+        <main>
+            <section class="calculator-shell">
+                <div class="calculator-intro">
+                    <span class="section-kicker">START WITH YOUR NUMBERS</span>
+                    <h2>Find your daily targets</h2>
+                    <p>Enter your body measurements and goal. We will estimate calories and macros to help you build a
+                        meal plan.</p>
+                </div>
+                <div class="calculator-layout">
+                    <form id="calorie-form" class="calculator-form">
+                        <div class="calculator-form-grid">
+                            <div class="form-group">
+                                <label for="height">Height (cm)</label>
+                                <input type="number" id="height" name="height" min="100" max="250" step="1"
+                                    placeholder="e.g. 175" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="weight">Weight (kg)</label>
+                                <input type="number" id="weight" name="weight" min="20" max="150" step="0.1"
+                                    placeholder="e.g. 70" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="activity-level">Typical activity level</label>
+                            <select id="activity-level" name="activityLevel">
+                                <option value="1.2">Mostly sitting / little exercise</option>
+                                <option value="1.35">Lightly active, 1-3 days/week</option>
+                                <option value="1.5" selected>Moderately active, 3-5 days/week</option>
+                                <option value="1.7">Very active, 6-7 days/week</option>
+                            </select>
+                        </div>
+                        <div class="calculator-form-grid calculator-options-row">
+                            <div class="form-group">
+                                <label for="meals-per-day">Meals per day</label>
+                                <select id="meals-per-day" name="mealsPerDay">
+                                    <option value="2">2 meals</option>
+                                    <option value="3" selected>3 meals</option>
+                                    <option value="4">4 meals</option>
+                                    <option value="5">5 meals</option>
+                                    <option value="6">6 meals</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="calculator-diet">Diet preference</label>
+                                <select id="calculator-diet" name="calculatorDiet">
+                                    <option value="veg" selected>Vegetarian</option>
+                                    <option value="non-veg">Non-vegetarian</option>
+                                </select>
+                            </div>
+                        </div>
+                        <fieldset class="goal-options">
+                            <legend>Your goal</legend>
+                            <label class="goal-option"><input type="radio" name="calorieGoal" value="fat-loss"
+                                    checked><span><strong>Fat loss</strong><small>Gradual calorie
+                                        deficit</small></span></label>
+                            <label class="goal-option"><input type="radio" name="calorieGoal"
+                                    value="muscle-build"><span><strong>Muscle build</strong><small>Fuel training and
+                                        growth</small></span></label>
+                            <label class="goal-option"><input type="radio" name="calorieGoal"
+                                    value="maintenance"><span><strong>Maintenance</strong><small>Stay around your
+                                        current weight</small></span></label>
+                            <label class="goal-option"><input type="radio" name="calorieGoal"
+                                    value="weight-gain"><span><strong>Weight gain</strong><small>Build a steady
+                                        surplus</small></span></label>
+                        </fieldset>
+                        <button type="submit">Calculate my targets</button>
+                        <p id="calorie-form-error" class="error-message" role="alert"></p>
+                    </form>
+                    <div id="calorie-results" class="calorie-results" aria-live="polite">
+                        <div class="calculator-placeholder">
+                            <span aria-hidden="true">◎</span>
+                            <strong>Your targets will appear here</strong>
+                            <p>Use the calculator to get a starting point for your meal plan.</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="calculator-note">These are estimates for planning purposes, not medical advice. Your actual
+                    needs may vary.</p>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============ MEAL PLANNER TAB ============ -->
+    <div class="tab-page app-shell" id="tab-planner">
+        <main>
+            <section id="macro-form-section">
+                <h2>Set Your Targets</h2>
+                <form id="macro-form">
+
+                    <div class="form-group">
+                        <label for="calories">Calories (kcal)</label>
+                        <input type="number" id="calories" name="calories" min="1" placeholder="e.g. 500" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="protein">Protein (g)</label>
+                        <input type="number" id="protein" name="protein" min="1" placeholder="e.g. 30" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="carbs">Carbs (g)</label>
+                        <input type="number" id="carbs" name="carbs" min="1" placeholder="e.g. 50" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fat">Fat (g)</label>
+                        <input type="number" id="fat" name="fat" min="1" placeholder="e.g. 20" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fiber">Fiber (g)</label>
+                        <input type="number" id="fiber" name="fiber" min="1" placeholder="e.g. 28" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Dietary Preference</label>
+
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="dietPreference" value="veg" checked>
+                                Vegetarian
+                            </label>
+
+                            <label>
+                                <input type="radio" name="dietPreference" value="non-veg">
+                                Non-Vegetarian
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit">Find Meals</button>
+
+                </form>
+
+                <p id="form-error" class="error-message"></p>
+
+                <div id="consistency-warning" class="warning-message" style="display: none;">
+                </div>
+            </section>
+
+            <section id="results-section">
+                <h2>Meal Suggestions</h2>
+                <div id="results-container">
+                    <p id="results-placeholder">No results yet. Enter your targets above.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============ FOOD DATABASE TAB ============ -->
+    <div class="tab-page app-shell" id="tab-database">
+        <main>
+            <section id="food-list-section">
+                <div class="database-heading">
+                    <div>
+                        <span class="section-kicker">EXPLORE YOUR OPTIONS</span>
+                        <div class="database-title-row">
+                            <span class="database-title-icon" aria-hidden="true">✦</span>
+                            <h2>Food Database</h2>
+                        </div>
+                        <p class="database-intro">Browse nutrition per 100g and find ingredients that fit your plan.</p>
+                    </div>
+                    <span class="food-count" id="food-count">0 foods</span>
+                </div>
+                <div class="database-context" aria-label="Food database details">
+                    <span><span class="context-dot"></span>Nutrition snapshot</span>
+                    <span>Values shown per 100g</span>
+                </div>
+                <div class="database-stats" aria-label="Food database summary">
+                    <div class="database-stat database-stat-total">
+                        <span class="database-stat-icon" aria-hidden="true">◈</span>
+                        <span><strong id="database-total-count">0</strong><small>Total foods</small></span>
+                    </div>
+                    <div class="database-stat database-stat-veg">
+                        <span class="database-stat-icon" aria-hidden="true">●</span>
+                        <span><strong id="database-veg-count">0</strong><small>Vegetarian</small></span>
+                    </div>
+                    <div class="database-stat database-stat-nonveg">
+                        <span class="database-stat-icon" aria-hidden="true">◆</span>
+                        <span><strong id="database-nonveg-count">0</strong><small>Non-vegetarian</small></span>
+                    </div>
+                </div>
+                <div class="database-toolbar">
+                    <div class="database-search">
+                        <label class="search-label" for="food-search">Find an ingredient</label>
+                        <div class="search-input-wrap">
+                            <span aria-hidden="true">⌕</span>
+                            <input type="text" id="food-search" placeholder="Search foods, ingredients, or meals...">
+                        </div>
+                    </div>
+                    <div class="database-filters">
+                        <div class="diet-filter" role="group" aria-label="Filter foods by diet">
+                            <span class="filter-label">Diet</span>
+                            <button type="button" class="diet-filter-btn active" data-diet-filter="all">All
+                                foods</button>
+                            <button type="button" class="diet-filter-btn" data-diet-filter="veg"><span
+                                    aria-hidden="true">●</span> Vegetarian</button>
+                            <button type="button" class="diet-filter-btn" data-diet-filter="non-veg"><span
+                                    aria-hidden="true">◆</span> Non-vegetarian</button>
+                        </div>
+                        <div class="category-filter">
+                            <label class="filter-label" for="category-filter">Category</label>
+                            <select id="category-filter">
+                                <option value="all">All categories</option>
+                                <option value="Protein">Protein</option>
+                                <option value="Carbs">Carbs</option>
+                                <option value="Fat">Fat</option>
+                                <option value="Dairy">Dairy</option>
+                                <option value="Vegetable">Vegetable</option>
+                            </select>
+                        </div>
+                        <button type="button" id="clear-food-filters" class="clear-food-filters">Clear filters</button>
+                    </div>
+                </div>
+                <div id="food-list-container"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============ ADMIN TAB ============ -->
+    <div class="tab-page app-shell" id="tab-admin">
+        <main>
+            <section id="admin-section">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Admin workspace</p>
+                        <h2>Add Food Item</h2>
+                    </div>
+                    <span class="count-badge" id="custom-food-count">0 custom</span>
+                </div>
+                <p class="section-description">Nutrition values are saved on this device and become available in the
+                    meal planner.</p>
+                <form id="food-form" class="admin-form">
+                    <div class="form-group"><label for="food-name">Food name</label><input type="text" id="food-name"
+                            name="name" required placeholder="e.g. Tempeh, cooked"></div>
+                    <div class="admin-form-grid">
+                        <div class="form-group"><label for="food-category">Category</label><select id="food-category"
+                                name="category">
+                                <option>Protein</option>
+                                <option>Carbs</option>
+                                <option>Fat</option>
+                                <option>Dairy</option>
+                                <option>Vegetable</option>
+                            </select></div>
+                        <div class="form-group"><label for="food-diet">Diet type</label><select id="food-diet"
+                                name="dietType">
+                                <option value="veg">Vegetarian</option>
+                                <option value="non-veg">Non-vegetarian</option>
+                            </select></div>
+                    </div>
+                    <div class="admin-form-grid nutrition-grid">
+                        <div class="form-group"><label for="food-calories">Calories / 100g</label><input type="number"
+                                id="food-calories" name="calories" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-protein">Protein (g)</label><input type="number"
+                                id="food-protein" name="protein" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-carbs">Carbs (g)</label><input type="number"
+                                id="food-carbs" name="carbs" min="0" step="0.1" required></div>
+                        <div class="form-group"><label for="food-fat">Fat (g)</label><input type="number" id="food-fat"
+                                name="fat" min="0" step="0.1" required></div>
+                    </div>
+                    <button type="submit">Add food to database</button>
+                    <p id="food-form-message" class="form-message" role="status"></p>
+                </form>
+            </section>
+            <section>
+                <h2>Manage Food Items</h2>
+                <div id="custom-foods-container">
+                    <p class="empty-message">Food items will appear here after loading.</p>
+                </div>
+            </section>
+            <section class="restore-database-box">
+                <div>
+                    <p class="eyebrow">Database maintenance</p>
+                    <h2>Restore original database</h2>
+                    <p class="section-description">Remove locally added foods and bring back any built-in foods you
+                        removed.</p>
+                </div>
+                <button type="button" id="restore-database-button" class="restore-database-button">Restore
+                    database</button>
+                <p id="restore-database-message" class="form-message" role="status"></p>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============ FAVORITES TAB ============ -->
+    <div class="tab-page app-shell" id="tab-favorites">
+        <main>
+            <section id="favorites-section">
+                <h2>Your Favorite Meals</h2>
+                <div id="favorites-container">
+                    <p id="favorites-placeholder">No favorites saved yet.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+
+
+    <!-- ============ DAILY LOG TAB ============ -->
+    <div class="tab-page app-shell" id="tab-log">
+        <main>
+            <section id="daily-log-section">
+                <h2>Today's Meal Log</h2>
+                <div id="daily-totals"></div>
+                <div id="daily-log-container">
+                    <p id="log-placeholder">No meals logged today.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============ PROFILE TAB ============ -->
+    <div class="tab-page app-shell" id="tab-profile">
+        <main>
+            <section id="profile-section">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="36" height="36">
+                            <path
+                                d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zm0 2.5c-3.3 0-9.8 1.6-9.8 4.9v2.4h19.6v-2.4c0-3.3-6.5-4.9-9.8-4.9z" />
+                        </svg>
+                    </div>
+                    <div class="profile-header-info">
+                        <h2 id="profile-username">Username</h2>
+                        <div class="profile-badges">
+                            <span class="goal-result-badge" id="profile-role-badge">Role</span>
+                            <span class="profile-status"><span class="context-dot"></span>Active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-block">
+                    <span class="section-kicker">ACCOUNT INFORMATION</span>
+                    <div class="profile-info-grid">
+                        <div class="profile-info-row"><span>Username</span><strong id="profile-info-username">—</strong>
+                        </div>
+                        <div class="profile-info-row"><span>Role</span><strong id="profile-info-role">—</strong></div>
+                        <div class="profile-info-row"><span>Status</span><strong>Active</strong></div>
+                    </div>
+                </div>
+
+                <div class="profile-block">
+                    <span class="section-kicker">ACTIVITY</span>
+                    <div class="database-stats profile-stats">
+                        <div class="database-stat database-stat-total">
+                            <span class="database-stat-icon" aria-hidden="true">⭐</span>
+                            <span><strong id="profile-favorites-count">0</strong><small>Favorites</small></span>
+                        </div>
+                        <div class="database-stat database-stat-veg">
+                            <span class="database-stat-icon" aria-hidden="true">📋</span>
+                            <span><strong id="profile-log-count">0</strong><small>Meals Logged</small></span>
+                        </div>
+                        <div class="database-stat database-stat-nonveg">
+                            <span class="database-stat-icon" aria-hidden="true">🥗</span>
+                            <span><strong id="profile-custom-count">0</strong><small>Custom Foods</small></span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="logout-btn" class="logout-btn">Logout</button>
+            </section>
+        </main>
+    </div>
+
+
+
+    <script src="script.js?v=8"></script>
+</body>
+
+</html>

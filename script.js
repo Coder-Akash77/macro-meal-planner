@@ -865,15 +865,30 @@ signupForm.addEventListener("submit", function (event) {
     event.preventDefault();
 
     const username = document.getElementById("signup-username").value.trim();
+    const email = document.getElementById("signup-email").value.trim();
     const password = document.getElementById("signup-password").value;
     const confirmPassword = document.getElementById("signup-confirm-password").value;
 
     signupError.textContent = "";
 
+    if (username.length < 3) {
+        signupError.textContent = "Username must be at least 3 characters.";
+        return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+        signupError.textContent = "Enter a valid email address.";
+        return;
+    }
+
+    if (password.length < 6) {
+        signupError.textContent = "Password must be at least 6 characters.";
+        return;
+    }
+
     if (password !== confirmPassword) {
         signupError.textContent = "Passwords do not match.";
-        if (username.length < 3) { signupError.textContent = "Username must be at least 3 characters."; return; }
-        if (password.length < 4) { signupError.textContent = "Password must be at least 4 characters."; return; }
         return;
     }
 
@@ -888,22 +903,31 @@ signupForm.addEventListener("submit", function (event) {
         return;
     }
 
+    const existingEmail = users.find(function (user) {
+        return (user.email || "").toLowerCase() === email.toLowerCase();
+    });
+
+    if (existingEmail) {
+        signupError.textContent = "An account with this email already exists.";
+        return;
+    }
+
     users.push({
         username: username,
+        email: email,
         password: password,
         role: "user"
     });
 
     saveUsers(users);
 
-    alert("Account created successfully. You can now log in.");
+    alert("Account created successfully. Please log in.");
 
     signupForm.reset();
 
-    document.getElementById("signup-view").classList.add("hidden");
-    document.getElementById("login-view").classList.remove("hidden");
+    document.getElementById("signup-view").style.display = "none";
+    document.getElementById("login-view").style.display = "block";
 });
-
 
 
 loginForm.addEventListener("submit", function (event) {
@@ -1080,6 +1104,7 @@ favoritesContainer.addEventListener("click", function (event) {
 // Handle form submission
 macroForm.addEventListener("submit", function (event) {
     event.preventDefault();
+    resultsContainer.innerHTML = "";
 
     const calories = Number(document.getElementById("calories").value);
     const protein = Number(document.getElementById("protein").value);
