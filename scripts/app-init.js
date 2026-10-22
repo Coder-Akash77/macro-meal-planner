@@ -1,0 +1,5 @@
+loadFoodData();
+displayFavorites();
+displayDailyLog();
+displayCustomFoods();
+

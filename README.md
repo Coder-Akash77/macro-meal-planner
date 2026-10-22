@@ -172,7 +172,17 @@ MacroMeal/
 │
 ├── index.html
 ├── style.css
-├── script.js
+├── scripts/
+│   ├── app-core.js            # Shared DOM references and tab navigation
+│   ├── food-database.js       # Food browsing, search, and filters
+│   ├── food-data.js           # Load food data from JSON and local storage
+│   ├── nutrition.js           # Nutrition calculations and serving sizes
+│   ├── meal-planner.js        # Meal matching and planner interactions
+│   ├── meal-tracking.js       # Favorites and daily meal log
+│   ├── calorie-calculator.js  # Daily calorie and meal plan calculator
+│   ├── auth.js                # Login, signup, and logout
+│   ├── admin.js               # Admin food management
+│   └── app-init.js            # Start app data loading and initial rendering
 │
 ├── data/
 │   └── foods.json          # Food nutrition database
