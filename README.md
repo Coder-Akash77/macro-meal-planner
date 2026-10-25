@@ -37,6 +37,7 @@ That single design decision turned this from a basic calculator into a genuine *
 |---|---|
 | 🧮 **Calorie Calculator** | Converts height, weight, activity level, meals/day and goal into daily calorie & macro targets |
 | 🍽️ **Smart Meal Planner** | Runs a combinatorial search across the food database and ranks results by closeness to your target |
+| ✏️ **Editable Meal Suggestions** | Add, remove, replace, and resize foods; see live nutrition and target matching, then save edits locally |
 | 🥦 **Food Database** | 190 foods, browsable and filterable by diet type and category |
 | ⭐ **Favorites** | Save meal combinations you like and reuse them instantly |
 | 📆 **Daily Log** | Track what you actually eat, stored locally per device |
@@ -117,6 +118,8 @@ Rank by closeness → return best matches
 - ✅ Protein, carbs, and fat are **weighted more heavily** than calories and fiber — so the planner optimizes for actual macro accuracy, not just hitting a calorie number.
 
 Rather than dumping every possible combination on the user, MacroMeal surfaces only the closest matches — turning a huge search space into a short, usable list.
+
+Suggested meals can be customized independently. Food quantities use grams, matching the database's per-100g nutrition values. Changes update the meal's score and target feedback immediately; the original suggestion remains available to restore. Calories are calculated from macros and fiber is marked as estimated because the current food database does not provide fiber values. Customized meal plans, meal-slot selections, favorites, and daily logs are stored in the browser's local storage.
 
 ---
 
