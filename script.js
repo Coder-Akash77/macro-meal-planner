@@ -59,6 +59,7 @@ let selectedDietFilter = "all";
 let selectedCategoryFilter = "all";
 const CALORIE_TOLERANCE_PERCENT = 5;
 const MACRO_TOLERANCE_PERCENT = 10;
+const CUSTOM_MEAL_PLAN_KEY = "macro-meal-custom-plan";
 
 
 function switchTab(tabName, updateUrl) {
@@ -531,47 +532,307 @@ function selectDiverseMeals(suggestions, count) {
     return selected;
 }
 
-function displayResults(results) {
-    window.currentResults = results;
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+        return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[character];
+    });
+}
 
-    resultsContainer.innerHTML = ""; // clear previous content
+function copyMealItems(items) {
+    return items.map(function (item) {
+        return { food: item.food, quantity: Number(item.quantity) };
+    });
+}
 
+function serializeMealItems(items) {
+    return items.map(function (item) {
+        return { food: item.food, quantity: Number(item.quantity) };
+    });
+}
+
+function getMealResultState(result) {
+    return {
+        id: result.id,
+        target: result.target,
+        dietPreference: result.dietPreference,
+        mealSlot: result.mealSlot,
+        editing: result.editing,
+        pickerMode: result.pickerMode,
+        pickerQuery: result.pickerQuery,
+        pickerFoodId: result.pickerFoodId,
+        pickerQuantity: result.pickerQuantity,
+        replaceIndex: result.replaceIndex,
+        originalItems: serializeMealItems(result.originalCombination.items),
+        items: serializeMealItems(result.combination.items),
+        editBaselineItems: result.editBaselineItems
+            ? serializeMealItems(result.editBaselineItems)
+            : null
+    };
+}
+
+function saveMealPlan() {
+    const results = window.currentResults || [];
     if (results.length === 0) {
-        resultsContainer.innerHTML = "<div class='no-results-message'>No combination found within the selected tolerance. Try adjusting your calorie, protein, carb, fat, or fiber target.</div>";
+        localStorage.removeItem(CUSTOM_MEAL_PLAN_KEY);
         return;
     }
 
-    const topResults = results.slice(0, 5); // show top 5 matches only
+    localStorage.setItem(CUSTOM_MEAL_PLAN_KEY, JSON.stringify({
+        target: results[0].target,
+        dietPreference: results[0].dietPreference,
+        results: results.map(getMealResultState)
+    }));
+}
 
-    topResults.forEach(function (result) {
-        const card = document.createElement("div");
-        card.classList.add("meal-card");
-
-        let foodListHTML = "";
-        result.combination.items.forEach(function (item) {
-            foodListHTML += `<li>${item.food.name} — ${item.quantity}g</li>`;
-        });
-
-        card.innerHTML = `
-      <div class="meal-card-header">
-        <span class="match-score">${result.score.toFixed(1)}% match</span>
-      </div>
-      <ul class="meal-food-list">${foodListHTML}</ul>
-      <div class="meal-totals">
-        Calories: ${result.combination.totalCalories.toFixed(0)} kcal |
-        Protein: ${result.combination.totalProtein.toFixed(1)}g |
-        Carbs: ${result.combination.totalCarbs.toFixed(1)}g |
-                Fat: ${result.combination.totalFat.toFixed(1)}g |
-                Fiber: ${result.combination.totalFiber.toFixed(1)}g
-      </div>
-      <div class="meal-card-actions">
-        <button class="save-favorite-btn">Save to Favorites</button>
-        <button class="log-meal-btn">Log This Meal</button>
-      </div>
-    `;
-
-        resultsContainer.appendChild(card);
+function getMealTargetStatus(total, target) {
+    const values = [
+        { label: "calories", actual: total.totalCalories, target: target.calories, tolerance: CALORIE_TOLERANCE_PERCENT, unit: "kcal" },
+        { label: "protein", actual: total.totalProtein, target: target.protein, tolerance: MACRO_TOLERANCE_PERCENT, unit: "g" },
+        { label: "carbs", actual: total.totalCarbs, target: target.carbs, tolerance: MACRO_TOLERANCE_PERCENT, unit: "g" },
+        { label: "fat", actual: total.totalFat, target: target.fat, tolerance: MACRO_TOLERANCE_PERCENT, unit: "g" },
+        { label: "estimated fiber", actual: total.totalFiber, target: target.fiber, tolerance: MACRO_TOLERANCE_PERCENT, unit: "g" }
+    ];
+    const differences = values.filter(function (value) {
+        return value.target > 0 && Math.abs(value.actual - value.target) / value.target > value.tolerance / 100;
+    }).map(function (value) {
+        const direction = value.actual > value.target ? "above" : "below";
+        const difference = Math.abs(value.actual - value.target);
+        return value.label + " " + direction + " by " + difference.toFixed(value.unit === "kcal" ? 0 : 1) + value.unit;
     });
+    return differences;
+}
+
+function renderMealDashboard(result, total) {
+    const target = result.target;
+    const score = calculateMatchScore(total, target);
+    const withinTolerance = isWithinTolerance(total, target);
+    const originalTotal = result.originalCombination;
+    const proteinCalories = total.totalProtein * 4;
+    const carbsCalories = total.totalCarbs * 4;
+    const fatCalories = total.totalFat * 9;
+    const fiberCalories = total.totalFiber * 2;
+    const macroCalories = proteinCalories + carbsCalories + fatCalories + fiberCalories;
+    const proteinShare = macroCalories ? proteinCalories / macroCalories * 100 : 0;
+    const carbsShare = macroCalories ? carbsCalories / macroCalories * 100 : 0;
+    const fatShare = macroCalories ? fatCalories / macroCalories * 100 : 0;
+    const fiberShare = macroCalories ? fiberCalories / macroCalories * 100 : 0;
+    const feedback = getMealTargetStatus(total, target);
+    const targetRows = [
+        { label: "Protein", actual: total.totalProtein, target: target.protein, unit: "g", className: "protein" },
+        { label: "Carbs", actual: total.totalCarbs, target: target.carbs, unit: "g", className: "carbs" },
+        { label: "Fat", actual: total.totalFat, target: target.fat, unit: "g", className: "fat", },
+        { label: "Fiber (est.)", actual: total.totalFiber, target: target.fiber, unit: "g", className: "fiber" }
+    ];
+    const targetBars = targetRows.map(function (row) {
+        const progress = row.target > 0 ? Math.min(100, row.actual / row.target * 100) : 0;
+        return `<div class="target-progress-row">
+            <div><span>${row.label}</span><strong>${row.actual.toFixed(1)} / ${row.target} ${row.unit}</strong></div>
+            <div class="target-progress-track"><span class="target-progress-${row.className}" style="width:${progress}%"></span></div>
+        </div>`;
+    }).join("");
+    const calorieProgress = target.calories > 0 ? Math.min(100, total.totalCalories / target.calories * 100) : 0;
+    const hasNutritionDifference = Math.abs(total.totalCalories - originalTotal.totalCalories) > 0.05 ||
+        Math.abs(total.totalProtein - originalTotal.totalProtein) > 0.05 ||
+        Math.abs(total.totalCarbs - originalTotal.totalCarbs) > 0.05 ||
+        Math.abs(total.totalFat - originalTotal.totalFat) > 0.05 ||
+        Math.abs(total.totalFiber - originalTotal.totalFiber) > 0.05;
+    const originalDifference = hasNutritionDifference
+        ? `<p class="original-nutrition-note">Original suggestion: ${originalTotal.totalCalories.toFixed(0)} kcal · P ${originalTotal.totalProtein.toFixed(1)}g · C ${originalTotal.totalCarbs.toFixed(1)}g · F ${originalTotal.totalFat.toFixed(1)}g · Fiber ${originalTotal.totalFiber.toFixed(1)}g</p>`
+        : "";
+    const statusMessage = feedback.length === 0
+        ? "Within the planner's calorie and macro tolerance."
+        : "To get closer, adjust: " + feedback.join(", ") + ".";
+
+    return `<div class="meal-dashboard">
+        <div class="meal-dashboard-top">
+            <div class="macro-doughnut" role="img" aria-label="Estimated nutrition distribution: protein ${proteinShare.toFixed(0)}%, carbs ${carbsShare.toFixed(0)}%, fat ${fatShare.toFixed(0)}%, fiber ${fiberShare.toFixed(0)}%"
+                style="--protein-share:${proteinShare}%;--carbs-share:${carbsShare}%;--fat-share:${fatShare}%;--fiber-share:${fiberShare}%">
+                <div><strong>${score.toFixed(1)}%</strong><span>match</span></div>
+            </div>
+            <div class="macro-legend">
+                <span><i class="legend-protein"></i>Protein ${total.totalProtein.toFixed(1)}g</span>
+                <span><i class="legend-carbs"></i>Carbs ${total.totalCarbs.toFixed(1)}g</span>
+                <span><i class="legend-fat"></i>Fat ${total.totalFat.toFixed(1)}g</span>
+                <span><i class="legend-fiber"></i>Fiber (est.) ${total.totalFiber.toFixed(1)}g</span>
+            </div>
+        </div>
+        <div class="calorie-progress">
+            <div><strong>Estimated calories</strong><span>${total.totalCalories.toFixed(0)} / ${target.calories} kcal</span></div>
+            <div class="target-progress-track"><span class="target-progress-calories" style="width:${calorieProgress}%"></span></div>
+        </div>
+        <div class="target-progress-list">${targetBars}</div>
+        <p class="match-feedback ${withinTolerance ? "match-within-target" : "match-outside-target"}" role="status">${escapeHTML(statusMessage)}</p>
+        <p class="nutrition-estimate-note">Calories are calculated from macros; fiber is estimated because the food database does not include fiber values.</p>
+        ${originalDifference}
+    </div>`;
+}
+
+function renderPlannerDaySummary(results) {
+    const slots = ["Breakfast", "Lunch", "Dinner"];
+    const selected = slots.map(function (slot) {
+        return results.find(function (result) {
+            return result.mealSlot === slot;
+        });
+    }).filter(Boolean);
+    const total = selected.reduce(function (sum, result) {
+        sum.totalCalories += result.combination.totalCalories;
+        sum.totalProtein += result.combination.totalProtein;
+        sum.totalCarbs += result.combination.totalCarbs;
+        sum.totalFat += result.combination.totalFat;
+        sum.totalFiber += result.combination.totalFiber;
+        return sum;
+    }, { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0, totalFiber: 0 });
+    const choices = selected.length
+        ? `<p>${selected.map(function (result) {
+            return escapeHTML(result.mealSlot) + ": " + result.combination.totalCalories.toFixed(0) + " kcal";
+        }).join(" · ")}</p>
+           <strong>Selected meals · daily total: ${total.totalCalories.toFixed(0)} estimated kcal | P ${total.totalProtein.toFixed(1)}g | C ${total.totalCarbs.toFixed(1)}g | F ${total.totalFat.toFixed(1)}g | Estimated fiber ${total.totalFiber.toFixed(1)}g</strong>`
+        : "<p>Assign a suggestion to breakfast, lunch, or dinner to build a separate daily total. Each card shows its own meal totals.</p>";
+    return `<div class="planner-day-summary"><strong>Selected meals — full day</strong>${choices}</div>`;
+}
+
+function renderFoodPicker(result) {
+    if (!result.pickerMode) {
+        return "";
+    }
+    const allowedFoods = filterByDiet(foodData, result.dietPreference);
+    const query = (result.pickerQuery || "").trim().toLowerCase();
+    const matchingFoods = allowedFoods.filter(function (food) {
+        return !query || food.name.toLowerCase().includes(query);
+    });
+    const options = matchingFoods.map(function (food) {
+        return `<option value="${escapeHTML(food.id)}" ${String(food.id) === String(result.pickerFoodId) ? "selected" : ""}>${escapeHTML(food.name)} · ${escapeHTML(food.category)}</option>`;
+    }).join("");
+    return `<div class="meal-food-picker">
+        <label>Search ${result.dietPreference === "veg" ? "vegetarian" : "diet-compatible"} foods
+            <input type="search" class="meal-food-search" data-result-id="${escapeHTML(result.id)}" value="${escapeHTML(result.pickerQuery || "")}" placeholder="Search foods..." aria-label="Search foods to add or replace">
+        </label>
+        <label>Choose food
+            <select class="meal-food-choice" data-result-id="${escapeHTML(result.id)}" ${matchingFoods.length ? "" : "disabled"}>
+                ${matchingFoods.length ? options : "<option>No matching foods</option>"}
+            </select>
+        </label>
+        ${result.pickerMode === "add" ? `<label>Quantity in grams
+            <input type="number" min="0.1" step="1" value="${Number(result.pickerQuantity) || 100}" data-role="picker-quantity" aria-label="Quantity in grams to add">
+        </label>` : ""}
+        <div class="meal-picker-actions">
+            <button type="button" class="apply-food-picker" data-action="apply-food-picker" data-result-id="${escapeHTML(result.id)}" ${matchingFoods.length ? "" : "disabled"}>${result.pickerMode === "replace" ? "Replace food" : "Add selected food"}</button>
+            <button type="button" class="cancel-food-picker" data-action="cancel-food-picker" data-result-id="${escapeHTML(result.id)}">Close</button>
+        </div>
+    </div>`;
+}
+
+function renderMealCard(result, index) {
+    const total = calculateCombinationTotal(result.combination.items);
+    result.combination = total;
+    const foodRows = result.combination.items.map(function (item, itemIndex) {
+        const nutrition = calculateNutrition(item.food, item.quantity);
+        const controls = result.editing
+            ? `<div class="meal-food-controls">
+                <button type="button" class="quantity-step" data-action="decrease" data-index="${itemIndex}" aria-label="Decrease ${escapeHTML(item.food.name)} quantity">−</button>
+                <label class="quantity-field"><span class="visually-hidden">Quantity in grams for ${escapeHTML(item.food.name)}</span><input type="number" min="0.1" step="1" value="${Number(item.quantity)}" data-role="quantity" data-index="${itemIndex}" aria-label="${escapeHTML(item.food.name)} quantity in grams"><span>g</span></label>
+                <button type="button" class="quantity-step" data-action="increase" data-index="${itemIndex}" aria-label="Increase ${escapeHTML(item.food.name)} quantity">+</button>
+                <button type="button" class="food-row-action" data-action="replace" data-index="${itemIndex}">Replace</button>
+                <button type="button" class="food-row-remove" data-action="remove" data-index="${itemIndex}" aria-label="Remove ${escapeHTML(item.food.name)}">Remove</button>
+            </div>`
+            : `<span class="food-quantity">${Number(item.quantity)} g</span>`;
+        return `<li class="meal-food-row">
+            <div class="meal-food-info"><strong>${escapeHTML(item.food.name)}</strong>${controls}
+                <small>${nutrition.calories.toFixed(0)} estimated kcal · P ${nutrition.protein.toFixed(1)}g · C ${nutrition.carbs.toFixed(1)}g · F ${nutrition.fat.toFixed(1)}g · Estimated fiber ${nutrition.fiber.toFixed(1)}g</small>
+            </div>
+        </li>`;
+    }).join("");
+    const slotOptions = ["Unassigned", "Breakfast", "Lunch", "Dinner"].map(function (slot) {
+        return `<option value="${slot === "Unassigned" ? "" : slot}" ${result.mealSlot === (slot === "Unassigned" ? "" : slot) ? "selected" : ""}>${slot}</option>`;
+    }).join("");
+    const editActions = result.editing
+        ? `<button type="button" class="add-food-btn" data-action="add-food">Add Food</button>
+           <button type="button" class="restore-original-btn" data-action="restore-original">Restore Original</button>
+           <button type="button" class="save-changes-btn" data-action="save-changes">Save Changes</button>
+           <button type="button" class="cancel-edits-btn" data-action="cancel-edits">Cancel</button>`
+        : `<button type="button" class="customize-meal-btn" data-action="edit-meal">Customize Meal</button>`;
+    const rowContent = foodRows || `<li class="meal-empty-items">No foods in this meal yet. Use Add Food to build your combination.</li>`;
+    return `<article class="meal-card" data-result-id="${escapeHTML(result.id)}">
+        <div class="meal-card-header">
+            <span class="suggestion-label">Suggestion ${index + 1}</span>
+            <span class="match-score">${calculateMatchScore(total, result.target).toFixed(1)}% match</span>
+        </div>
+        <label class="meal-slot-label">Plan this as
+            <select class="meal-slot-select" data-role="meal-slot" aria-label="Select meal slot for suggestion ${index + 1}">${slotOptions}</select>
+        </label>
+        <ul class="meal-food-list">${rowContent}</ul>
+        ${renderFoodPicker(result)}
+        <div class="meal-totals">
+            Estimated calories: ${total.totalCalories.toFixed(0)} kcal | Protein: ${total.totalProtein.toFixed(1)}g | Carbs: ${total.totalCarbs.toFixed(1)}g | Fat: ${total.totalFat.toFixed(1)}g | Estimated fiber: ${total.totalFiber.toFixed(1)}g
+        </div>
+        ${renderMealDashboard(result, total)}
+        <div class="meal-card-actions">
+            ${editActions}
+            <button type="button" class="save-favorite-btn">Save to Favorites</button>
+            <button type="button" class="log-meal-btn">Log This Meal</button>
+        </div>
+    </article>`;
+}
+
+function displayResults(results) {
+    window.currentResults = results;
+    resultsContainer.innerHTML = "";
+
+    if (results.length === 0) {
+        resultsContainer.innerHTML = "<div class='no-results-message'>No combination found within the selected tolerance. Try adjusting your calorie, protein, carb, fat, or fiber target.</div>";
+        saveMealPlan();
+        return;
+    }
+
+    resultsContainer.innerHTML = renderPlannerDaySummary(results) + results.slice(0, 5).map(renderMealCard).join("");
+}
+
+function restoreMealPlan() {
+    const storedPlan = localStorage.getItem(CUSTOM_MEAL_PLAN_KEY);
+    if (!storedPlan) {
+        return;
+    }
+
+    const plan = JSON.parse(storedPlan);
+    if (!plan || !plan.target || !Array.isArray(plan.results) || plan.results.length === 0) {
+        return;
+    }
+    ["calories", "protein", "carbs", "fat", "fiber"].forEach(function (nutrient) {
+        document.getElementById(nutrient).value = plan.target[nutrient];
+    });
+    const preference = document.querySelector('input[name="dietPreference"][value="' + plan.dietPreference + '"]');
+    if (preference) {
+        preference.checked = true;
+    }
+
+    window.currentResults = plan.results.map(function (saved) {
+        const originalItems = saved.originalItems || saved.items || [];
+        const items = saved.items || originalItems;
+        const originalCombination = calculateCombinationTotal(copyMealItems(originalItems));
+        const currentItems = copyMealItems(items);
+        return {
+            id: saved.id,
+            target: saved.target || plan.target,
+            dietPreference: saved.dietPreference || plan.dietPreference,
+            mealSlot: saved.mealSlot || "",
+            editing: Boolean(saved.editing),
+            pickerMode: saved.pickerMode || "",
+            pickerQuery: saved.pickerQuery || "",
+            pickerFoodId: saved.pickerFoodId || "",
+            pickerQuantity: Number(saved.pickerQuantity) || 100,
+            replaceIndex: Number.isInteger(saved.replaceIndex) ? saved.replaceIndex : -1,
+            originalCombination: originalCombination,
+            editBaselineItems: saved.editBaselineItems ? copyMealItems(saved.editBaselineItems) : null,
+            combination: calculateCombinationTotal(currentItems)
+        };
+    });
+    displayResults(window.currentResults);
 }
 
 function getMealSignature(items) {
@@ -640,11 +901,11 @@ function displayFavorites() {
         card.innerHTML = `
       <ul class="meal-food-list">${foodListHTML}</ul>
       <div class="meal-totals">
-        Calories: ${favorite.totalCalories.toFixed(0)} kcal |
+        Estimated calories: ${favorite.totalCalories.toFixed(0)} kcal |
         Protein: ${favorite.totalProtein.toFixed(1)}g |
         Carbs: ${favorite.totalCarbs.toFixed(1)}g |
         Fat: ${favorite.totalFat.toFixed(1)}g |
-        Fiber: ${Number(favorite.totalFiber || 0).toFixed(1)}g
+        Estimated fiber: ${Number(favorite.totalFiber || 0).toFixed(1)}g
       </div>
       <div class="meal-card-actions">
         <button class="delete-favorite-btn" data-id="${favorite.id}">Remove</button>
@@ -728,11 +989,11 @@ function displayDailyLog() {
         card.innerHTML = `
       <ul class="meal-food-list">${foodListHTML}</ul>
       <div class="meal-totals">
-        Calories: ${meal.totalCalories.toFixed(0)} kcal |
+        Estimated calories: ${meal.totalCalories.toFixed(0)} kcal |
         Protein: ${meal.totalProtein.toFixed(1)}g |
         Carbs: ${meal.totalCarbs.toFixed(1)}g |
         Fat: ${meal.totalFat.toFixed(1)}g |
-        Fiber: ${Number(meal.totalFiber || 0).toFixed(1)}g
+        Estimated fiber: ${Number(meal.totalFiber || 0).toFixed(1)}g
       </div>
       <div class="meal-card-actions">
         <button class="delete-log-btn" data-id="${meal.id}">Remove</button>
@@ -744,11 +1005,11 @@ function displayDailyLog() {
 
     dailyTotals.innerHTML = `
     <strong>Today's Totals:</strong>
-    Calories: ${totalCalories.toFixed(0)} kcal |
+    Estimated calories: ${totalCalories.toFixed(0)} kcal |
     Protein: ${totalProtein.toFixed(1)}g |
     Carbs: ${totalCarbs.toFixed(1)}g |
     Fat: ${totalFat.toFixed(1)}g |
-    Fiber: ${totalFiber.toFixed(1)}g
+    Estimated fiber: ${totalFiber.toFixed(1)}g
   `;
 }
 
@@ -780,6 +1041,7 @@ async function loadFoodData() {
         renderFilteredFoods();
         displayCustomFoods();
         document.getElementById("stat-food-count").textContent = foodData.length;
+        restoreMealPlan();
     } catch (error) {
         console.error("Error loading food data:", error);
         formError.textContent = "Could not load food data. Please refresh the page.";
@@ -1063,32 +1325,212 @@ dietFilterButtons.forEach(function (button) {
 });
 
 resultsContainer.addEventListener("click", function (event) {
-        if (event.target.classList.contains("save-favorite-btn")) {
-        const card = event.target.closest(".meal-card");
-        const cardIndex = Array.from(resultsContainer.children).indexOf(card);
-        const mealToSave = window.currentResults[cardIndex].combination;
+    const target = event.target;
+    const card = target.closest(".meal-card");
+    if (!card) {
+        return;
+    }
+    const resultIndex = Array.from(resultsContainer.querySelectorAll(".meal-card")).indexOf(card);
+    const result = window.currentResults[resultIndex];
+    if (!result) {
+        return;
+    }
 
-        const wasSaved = saveFavorite(mealToSave);
+    const actionButton = target.closest("[data-action]");
+    if (actionButton) {
+        const action = actionButton.dataset.action;
+        if (action === "edit-meal") {
+            result.editing = true;
+            result.editBaselineItems = copyMealItems(result.combination.items);
+            result.pickerMode = "";
+        } else if (action === "save-changes") {
+            result.editing = false;
+            result.editBaselineItems = null;
+            result.pickerMode = "";
+        } else if (action === "cancel-edits") {
+            result.combination = calculateCombinationTotal(copyMealItems(result.editBaselineItems || result.combination.items));
+            result.editing = false;
+            result.editBaselineItems = null;
+            result.pickerMode = "";
+        } else if (action === "restore-original") {
+            result.combination = calculateCombinationTotal(copyMealItems(result.originalCombination.items));
+            result.pickerMode = "";
+        } else if (action === "add-food") {
+            result.pickerMode = "add";
+            result.pickerQuery = "";
+            result.pickerQuantity = 100;
+            const allowedFoods = filterByDiet(foodData, result.dietPreference);
+            result.pickerFoodId = allowedFoods.length ? allowedFoods[0].id : "";
+        } else if (action === "replace") {
+            result.pickerMode = "replace";
+            result.pickerQuery = "";
+            result.replaceIndex = Number(actionButton.dataset.index);
+            const allowedFoods = filterByDiet(foodData, result.dietPreference);
+            result.pickerFoodId = allowedFoods.length ? allowedFoods[0].id : "";
+        } else if (action === "remove") {
+            result.combination.items.splice(Number(actionButton.dataset.index), 1);
+        } else if (action === "increase" || action === "decrease") {
+            const item = result.combination.items[Number(actionButton.dataset.index)];
+            if (item) {
+                const delta = action === "increase" ? 10 : -10;
+                item.quantity = Math.max(0.1, Number(item.quantity) + delta);
+            }
+        } else if (action === "apply-food-picker") {
+            const selectedFood = foodData.find(function (food) {
+                return String(food.id) === String(result.pickerFoodId);
+            });
+            if (!selectedFood || !filterByDiet([selectedFood], result.dietPreference).length) {
+                return;
+            }
+            if (result.pickerMode === "replace") {
+                const oldItem = result.combination.items[result.replaceIndex];
+                if (oldItem && String(oldItem.food.id) !== String(selectedFood.id)) {
+                    const duplicate = result.combination.items.find(function (item, itemIndex) {
+                        return itemIndex !== result.replaceIndex && String(item.food.id) === String(selectedFood.id);
+                    });
+                    if (duplicate) {
+                        duplicate.quantity += oldItem.quantity;
+                        result.combination.items.splice(result.replaceIndex, 1);
+                    } else {
+                        oldItem.food = selectedFood;
+                    }
+                }
+            } else {
+                const quantity = Number(result.pickerQuantity);
+                if (!Number.isFinite(quantity) || quantity <= 0) {
+                    return;
+                }
+                const duplicate = result.combination.items.find(function (item) {
+                    return String(item.food.id) === String(selectedFood.id);
+                });
+                if (duplicate) {
+                    duplicate.quantity += quantity;
+                } else {
+                    result.combination.items.push({ food: selectedFood, quantity: quantity });
+                }
+            }
+            result.pickerMode = "";
+        } else if (action === "cancel-food-picker") {
+            result.pickerMode = "";
+        }
+
+        displayResults(window.currentResults);
+        saveMealPlan();
+        return;
+    }
+
+    if (target.classList.contains("save-favorite-btn")) {
+        const wasSaved = saveFavorite(result.combination);
         displayFavorites();
         updateProfileStats();
-
-        if (wasSaved) {
-            alert("Meal saved to favorites!");
-        } else {
-            alert("This meal is already in your favorites.");
-        }
+        alert(wasSaved ? "Meal saved to favorites!" : "This meal is already in your favorites.");
     }
 
-    if (event.target.classList.contains("log-meal-btn")) {
-        const card = event.target.closest(".meal-card");
-        const cardIndex = Array.from(resultsContainer.children).indexOf(card);
-        const mealToLog = window.currentResults[cardIndex].combination;
-
-        logMeal(mealToLog);
+    if (target.classList.contains("log-meal-btn")) {
+        if (target.disabled) {
+            return;
+        }
+        target.disabled = true;
+        logMeal(result.combination);
         displayDailyLog();
         updateProfileStats();
-        alert("Meal logged for today!");
+        target.textContent = "Logged";
     }
+});
+
+resultsContainer.addEventListener("input", function (event) {
+    const input = event.target;
+    const card = input.closest(".meal-card");
+    if (!card) {
+        return;
+    }
+    const resultIndex = Array.from(resultsContainer.querySelectorAll(".meal-card")).indexOf(card);
+    const result = window.currentResults[resultIndex];
+    if (!result) {
+        return;
+    }
+    const cursorPosition = input.selectionStart;
+    if (input.dataset.role === "quantity") {
+        const quantity = Number(input.value);
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+            return;
+        }
+        const item = result.combination.items[Number(input.dataset.index)];
+        if (!item) {
+            return;
+        }
+        item.quantity = quantity;
+    } else if (input.classList.contains("meal-food-search")) {
+        result.pickerQuery = input.value;
+        const firstMatch = filterByDiet(foodData, result.dietPreference).find(function (food) {
+            return food.name.toLowerCase().includes(result.pickerQuery.trim().toLowerCase());
+        });
+        result.pickerFoodId = firstMatch ? firstMatch.id : "";
+    } else if (input.dataset.role === "picker-quantity") {
+        const quantity = Number(input.value);
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+            return;
+        }
+        result.pickerQuantity = quantity;
+    } else {
+        return;
+    }
+    displayResults(window.currentResults);
+    saveMealPlan();
+    const refreshedCard = resultsContainer.querySelectorAll(".meal-card")[resultIndex];
+    let replacement;
+    if (input.dataset.role === "quantity") {
+        replacement = refreshedCard.querySelector('[data-role="quantity"][data-index="' + input.dataset.index + '"]');
+    } else if (input.classList.contains("meal-food-search")) {
+        replacement = refreshedCard.querySelector(".meal-food-search");
+    } else {
+        replacement = refreshedCard.querySelector('[data-role="picker-quantity"]');
+    }
+    if (replacement) {
+        replacement.focus();
+        if (cursorPosition !== null && replacement.setSelectionRange) {
+            replacement.setSelectionRange(cursorPosition, cursorPosition);
+        }
+    }
+});
+
+resultsContainer.addEventListener("change", function (event) {
+    const input = event.target;
+    const card = input.closest(".meal-card");
+    if (!card) {
+        return;
+    }
+    const resultIndex = Array.from(resultsContainer.querySelectorAll(".meal-card")).indexOf(card);
+    const result = window.currentResults[resultIndex];
+    if (!result) {
+        return;
+    }
+    if (input.dataset.role === "quantity" || input.dataset.role === "picker-quantity") {
+        const quantity = Number(input.value);
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+            const item = result.combination.items[Number(input.dataset.index)];
+            input.value = input.dataset.role === "quantity"
+                ? (item ? item.quantity : 0)
+                : (result.pickerQuantity || 100);
+            return;
+        }
+    }
+    if (input.dataset.role === "meal-slot") {
+        result.mealSlot = input.value;
+        if (result.mealSlot) {
+            window.currentResults.forEach(function (otherResult) {
+                if (otherResult !== result && otherResult.mealSlot === result.mealSlot) {
+                    otherResult.mealSlot = "";
+                }
+            });
+        }
+    } else if (input.classList.contains("meal-food-choice")) {
+        result.pickerFoodId = input.value;
+    } else {
+        return;
+    }
+    displayResults(window.currentResults);
+    saveMealPlan();
 });
 
 favoritesContainer.addEventListener("click", function (event) {
@@ -1170,9 +1612,27 @@ macroForm.addEventListener("submit", function (event) {
     const filteredFoods = filterByDiet(foodData, dietPreference);
 
     const target = { calories, protein, carbs, fat, fiber };
-    const results = findBestMeals(filteredFoods, target, dietPreference);
+    const results = findBestMeals(filteredFoods, target, dietPreference).map(function (result, index) {
+        const originalItems = copyMealItems(result.combination.items);
+        return {
+            id: "suggestion-" + index + "-" + getMealSignature(originalItems),
+            target: target,
+            dietPreference: dietPreference,
+            mealSlot: "",
+            editing: false,
+            pickerMode: "",
+            pickerQuery: "",
+            pickerFoodId: "",
+            pickerQuantity: 100,
+            replaceIndex: -1,
+            originalCombination: calculateCombinationTotal(copyMealItems(originalItems)),
+            combination: calculateCombinationTotal(copyMealItems(originalItems)),
+            editBaselineItems: null
+        };
+    });
 
     displayResults(results);
+    saveMealPlan();
     document.getElementById("results-section").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
