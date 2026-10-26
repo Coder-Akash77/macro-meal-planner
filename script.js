@@ -27,6 +27,8 @@ const selectedRoleLabel = document.getElementById("selected-role-label");
 const adminNavTab = document.querySelector('.nav-tab[data-tab="admin"]');
 
 const LOGIN_KEY = "macro-meal-login";
+const TOKEN_KEY = "macro-meal-token";
+const API_BASE = "";
 
 let selectedRole = "user";
 
@@ -1123,7 +1125,8 @@ showLoginBtn.addEventListener("click", function () {
     signupError.textContent = "";
 });
 
-signupForm.addEventListener("submit", function (event) {
+
+signupForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const username = document.getElementById("signup-username").value.trim();
@@ -1138,14 +1141,8 @@ signupForm.addEventListener("submit", function (event) {
         return;
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-        signupError.textContent = "Enter a valid email address.";
-        return;
-    }
-
-    if (password.length < 6) {
-        signupError.textContent = "Password must be at least 6 characters.";
+    if (password.length < 8) {
+        signupError.textContent = "Password must be at least 8 characters.";
         return;
     }
 
@@ -1154,78 +1151,87 @@ signupForm.addEventListener("submit", function (event) {
         return;
     }
 
-    const users = getUsers();
+    try {
+        const response = await fetch(`${API_BASE}/api/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: username, email, password })
+        });
 
-    const existingUser = users.find(function (user) {
-        return user.username.toLowerCase() === username.toLowerCase();
-    });
+        const data = await response.json();
 
-    if (existingUser) {
-        signupError.textContent = "Username already exists.";
-        return;
+        if (!response.ok) {
+            throw new Error(data.message || "Registration failed.");
+        }
+
+        signupForm.reset();
+        document.getElementById("signup-view").style.display = "none";
+        document.getElementById("login-view").style.display = "block";
+        document.getElementById("login-username").value = email;
+        loginError.textContent = "Account created! Please log in.";
+    } catch (error) {
+        signupError.textContent = error.message || "Could not connect to the server.";
     }
-
-    const existingEmail = users.find(function (user) {
-        return (user.email || "").toLowerCase() === email.toLowerCase();
-    });
-
-    if (existingEmail) {
-        signupError.textContent = "An account with this email already exists.";
-        return;
-    }
-
-    users.push({
-        username: username,
-        email: email,
-        password: password,
-        role: "user"
-    });
-
-    saveUsers(users);
-
-    alert("Account created successfully. Please log in.");
-
-    signupForm.reset();
-
-    document.getElementById("signup-view").style.display = "none";
-    document.getElementById("login-view").style.display = "block";
 });
 
-
-loginForm.addEventListener("submit", function (event) {
+loginForm.addEventListener("submit", async function (event) {
     event.preventDefault();
-    const username = document.getElementById("login-username").value.trim();
+
+    const email = document.getElementById("login-username").value.trim();
     const password = document.getElementById("login-password").value;
 
     loginError.textContent = "";
 
-    if (!username || !password) {
-        loginError.textContent = "Enter your username and password.";
+    if (!email || !password) {
+        loginError.textContent = "Enter your email and password.";
         return;
     }
 
+    // Keep the existing demo admin login.
     if (selectedRole === "admin") {
-        if (username !== "admin" || password !== "admin123") {
+        if (email !== "admin" || password !== "admin123") {
             loginError.textContent = "Use the demo admin credentials shown below.";
             return;
         }
-        localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "admin", username: "admin" }));
+
+        localStorage.setItem(LOGIN_KEY, JSON.stringify({
+            loggedIn: true,
+            role: "admin",
+            username: "admin"
+        }));
         showApp("admin", "admin");
         return;
     }
 
-    const users = getUsers();
-    const validUser = users.find(function (user) {
-        return user.username === username && user.password === password;
-    });
+    try {
+        const response = await fetch(`${API_BASE}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
 
-    if (!validUser) {
-        loginError.textContent = "Invalid username or password.";
-        return;
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Invalid email or password.");
+        }
+
+        if (!data.token) {
+            throw new Error("Login succeeded but no token was returned.");
+        }
+
+        localStorage.setItem(TOKEN_KEY, data.token);
+        localStorage.setItem(LOGIN_KEY, JSON.stringify({
+            loggedIn: true,
+            role: "user",
+            username: data.user.name,
+            email: data.user.email
+        }));
+
+        showApp("user", data.user.name);
+    } catch (error) {
+        loginError.textContent = error.message || "Could not connect to the server.";
     }
-
-    localStorage.setItem(LOGIN_KEY, JSON.stringify({ loggedIn: true, role: "user", username: validUser.username }));
-    showApp("user", validUser.username);
 });
 
 const savedLogin = localStorage.getItem(LOGIN_KEY);
