@@ -10,9 +10,14 @@ const PORT = Number(process.env.PORT) || 5000;
 const frontendPath = path.join(__dirname, '..', 'frontend');
 const authRoutes = require('./routes/authRoutes');
 
+const mealRoutes = require("./routes/mealRoutes");
+
+
 app.use(cors({ origin: process.env.FRONTEND_ORIGIN || `http://localhost:${PORT}` }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(frontendPath));
+app.use("/api/meals", mealRoutes);
+
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'MacroMeal backend is running', timestamp: new Date().toISOString() });
