@@ -28,7 +28,7 @@ const adminNavTab = document.querySelector('.nav-tab[data-tab="admin"]');
 
 const LOGIN_KEY = "macro-meal-login";
 const TOKEN_KEY = "macro-meal-token";
-const API_BASE = "";
+const API_BASE = "http://localhost:5000";
 
 let selectedRole = "user";
 
