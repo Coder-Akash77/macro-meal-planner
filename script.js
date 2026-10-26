@@ -29,6 +29,36 @@ const adminNavTab = document.querySelector('.nav-tab[data-tab="admin"]');
 const LOGIN_KEY = "macro-meal-login";
 const TOKEN_KEY = "macro-meal-token";
 const API_BASE = "http://localhost:5000";
+let favoritesCache = [];
+let dailyLogCache = [];
+
+function getApiHeaders() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return token ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` } : { "Content-Type": "application/json" };
+}
+
+async function apiRequest(path, options = {}) {
+    const response = await fetch(`${API_BASE}${path}`, { ...options, headers: { ...getApiHeaders(), ...(options.headers || {}) } });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.message || `Request failed (${response.status})`);
+    return data;
+}
+
+async function loadPersistedMealData() {
+    if (selectedRole !== "user" || !localStorage.getItem(TOKEN_KEY)) return;
+    try {
+        const date = new Date().toISOString().slice(0, 10);
+        const [favoriteData, logData] = await Promise.all([apiRequest("/api/favorites"), apiRequest(`/api/daily-logs?date=${date}`)]);
+        favoritesCache = favoriteData.favorites || [];
+        dailyLogCache = logData.meals || [];
+        displayFavorites();
+        displayDailyLog();
+        updateProfileStats();
+    } catch (error) {
+        console.error("Could not load favorites or daily logs:", error);
+        alert(`Could not load saved favorites or daily logs from the server: ${error.message}`);
+    }
+}
 
 let selectedRole = "user";
 
@@ -847,181 +877,135 @@ function getMealSignature(items) {
         .join("|");
 }
 
-function saveFavorite(mealTotal) {
-    const favorites = getFavorites();
-
+async function saveFavorite(mealTotal) {
     const newSignature = getMealSignature(mealTotal.items);
-
-    const alreadySaved = favorites.some(function (favorite) {
+    const alreadySaved = getFavorites().some(function (favorite) {
         return getMealSignature(favorite.items) === newSignature;
     });
+    if (alreadySaved) return false;
 
-    if (alreadySaved) {
-        return false; // already in favorites, don't add a duplicate
-    }
-
-    const favoriteMeal = {
-        id: Date.now(), // unique id based on timestamp
-        items: mealTotal.items.map(function (item) {
-            return { name: item.food.name, quantity: item.quantity };
-        }),
+    const favoritePayload = {
+        items: mealTotal.items.map(function (item) { return { name: item.food.name, quantity: item.quantity }; }),
         totalCalories: mealTotal.totalCalories,
         totalProtein: mealTotal.totalProtein,
         totalCarbs: mealTotal.totalCarbs,
         totalFat: mealTotal.totalFat,
         totalFiber: mealTotal.totalFiber
     };
-
-    favorites.push(favoriteMeal);
-    localStorage.setItem("favorites", JSON.stringify(favorites));
+    if (selectedRole === "user" && localStorage.getItem(TOKEN_KEY)) {
+        const data = await apiRequest("/api/favorites", { method: "POST", body: JSON.stringify(favoritePayload) });
+        favoritesCache.unshift(data.favorite);
+    } else {
+        const favorites = getFavorites();
+        favorites.push({ ...favoritePayload, id: Date.now() });
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        favoritesCache = favorites;
+    }
     return true;
 }
 
 function getFavorites() {
+    if (selectedRole === "user" && localStorage.getItem(TOKEN_KEY)) return favoritesCache;
     const stored = localStorage.getItem("favorites");
-    return stored ? JSON.parse(stored) : [];
+    return stored ? JSON.parse(stored) : favoritesCache;
 }
 
 function displayFavorites() {
     const favorites = getFavorites();
     favoritesContainer.innerHTML = "";
-
     if (favorites.length === 0) {
         favoritesContainer.innerHTML = "<p>No favorites saved yet.</p>";
         return;
     }
-
     favorites.forEach(function (favorite) {
         const card = document.createElement("div");
         card.classList.add("meal-card");
-
         let foodListHTML = "";
-        favorite.items.forEach(function (item) {
-            foodListHTML += `<li>${item.name} — ${item.quantity}g</li>`;
-        });
-
+        favorite.items.forEach(function (item) { foodListHTML += `<li>${item.name} — ${item.quantity}g</li>`; });
         card.innerHTML = `
-      <ul class="meal-food-list">${foodListHTML}</ul>
-      <div class="meal-totals">
-        Estimated calories: ${favorite.totalCalories.toFixed(0)} kcal |
-        Protein: ${favorite.totalProtein.toFixed(1)}g |
-        Carbs: ${favorite.totalCarbs.toFixed(1)}g |
-        Fat: ${favorite.totalFat.toFixed(1)}g |
-        Estimated fiber: ${Number(favorite.totalFiber || 0).toFixed(1)}g
-      </div>
-      <div class="meal-card-actions">
-        <button class="delete-favorite-btn" data-id="${favorite.id}">Remove</button>
-      </div>
-    `;
-
+          <ul class="meal-food-list">${foodListHTML}</ul>
+          <div class="meal-totals">Estimated calories: ${Number(favorite.totalCalories || 0).toFixed(0)} kcal | Protein: ${Number(favorite.totalProtein || 0).toFixed(1)}g | Carbs: ${Number(favorite.totalCarbs || 0).toFixed(1)}g | Fat: ${Number(favorite.totalFat || 0).toFixed(1)}g | Estimated fiber: ${Number(favorite.totalFiber || 0).toFixed(1)}g</div>
+          <div class="meal-card-actions"><button class="delete-favorite-btn" data-id="${favorite._id || favorite.id}">Remove</button></div>`;
         favoritesContainer.appendChild(card);
     });
 }
 
-function deleteFavorite(id) {
-    let favorites = getFavorites();
-    favorites = favorites.filter(function (favorite) {
-        return favorite.id !== id;
-    });
-    localStorage.setItem("favorites", JSON.stringify(favorites));
+async function deleteFavorite(id) {
+    if (selectedRole === "user" && localStorage.getItem(TOKEN_KEY)) {
+        await apiRequest(`/api/favorites/${encodeURIComponent(id)}`, { method: "DELETE" });
+        favoritesCache = favoritesCache.filter(favorite => String(favorite._id) !== String(id));
+    } else {
+        const favorites = getFavorites().filter(favorite => String(favorite.id) !== String(id));
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        favoritesCache = favorites;
+    }
 }
 
 function getTodayKey() {
-    const today = new Date();
-    return "log-" + today.toISOString().split("T")[0]; // e.g. "log-2026-08-17"
+    return "log-" + new Date().toISOString().split("T")[0];
 }
 
-function logMeal(mealTotal) {
-    const key = getTodayKey();
-    const todayLog = getTodayLog();
-
-    const loggedMeal = {
-        id: Date.now(),
-        items: mealTotal.items.map(function (item) {
-            return { name: item.food.name, quantity: item.quantity };
-        }),
+async function logMeal(mealTotal) {
+    const payload = {
+        items: mealTotal.items.map(function (item) { return { name: item.food.name, quantity: item.quantity }; }),
         totalCalories: mealTotal.totalCalories,
         totalProtein: mealTotal.totalProtein,
         totalCarbs: mealTotal.totalCarbs,
         totalFat: mealTotal.totalFat,
-        totalFiber: mealTotal.totalFiber
+        totalFiber: mealTotal.totalFiber,
+        loggedDate: new Date().toISOString()
     };
-
-    todayLog.push(loggedMeal);
-    localStorage.setItem(key, JSON.stringify(todayLog));
+    if (selectedRole === "user" && localStorage.getItem(TOKEN_KEY)) {
+        const data = await apiRequest("/api/daily-logs", { method: "POST", body: JSON.stringify(payload) });
+        dailyLogCache.unshift(data.meal);
+    } else {
+        const todayLog = getTodayLog();
+        todayLog.push({ ...payload, id: Date.now() });
+        localStorage.setItem(getTodayKey(), JSON.stringify(todayLog));
+        dailyLogCache = todayLog;
+    }
 }
 
 function getTodayLog() {
-    const key = getTodayKey();
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : [];
+    if (selectedRole === "user" && localStorage.getItem(TOKEN_KEY)) return dailyLogCache;
+    const stored = localStorage.getItem(getTodayKey());
+    return stored ? JSON.parse(stored) : dailyLogCache;
 }
 
 function displayDailyLog() {
     const todayLog = getTodayLog();
     dailyLogContainer.innerHTML = "";
-
     if (todayLog.length === 0) {
         dailyLogContainer.innerHTML = "<p>No meals logged today.</p>";
         dailyTotals.innerHTML = "";
         return;
     }
-
-    let totalCalories = 0;
-    let totalProtein = 0;
-    let totalCarbs = 0;
-    let totalFat = 0;
-    let totalFiber = 0;
-
+    let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0, totalFiber = 0;
     todayLog.forEach(function (meal) {
-        totalCalories += meal.totalCalories;
-        totalProtein += meal.totalProtein;
-        totalCarbs += meal.totalCarbs;
-        totalFat += meal.totalFat;
+        totalCalories += Number(meal.totalCalories || 0);
+        totalProtein += Number(meal.totalProtein || 0);
+        totalCarbs += Number(meal.totalCarbs || 0);
+        totalFat += Number(meal.totalFat || 0);
         totalFiber += Number(meal.totalFiber || 0);
-
         const card = document.createElement("div");
         card.classList.add("meal-card");
-
-        let foodListHTML = "";
-        meal.items.forEach(function (item) {
-            foodListHTML += `<li>${item.name} — ${item.quantity}g</li>`;
-        });
-
-        card.innerHTML = `
-      <ul class="meal-food-list">${foodListHTML}</ul>
-      <div class="meal-totals">
-        Estimated calories: ${meal.totalCalories.toFixed(0)} kcal |
-        Protein: ${meal.totalProtein.toFixed(1)}g |
-        Carbs: ${meal.totalCarbs.toFixed(1)}g |
-        Fat: ${meal.totalFat.toFixed(1)}g |
-        Estimated fiber: ${Number(meal.totalFiber || 0).toFixed(1)}g
-      </div>
-      <div class="meal-card-actions">
-        <button class="delete-log-btn" data-id="${meal.id}">Remove</button>
-      </div>
-    `;
-
+        const items = meal.items || [];
+        const foodListHTML = items.map(item => `<li>${item.name} — ${item.quantity}g</li>`).join("");
+        card.innerHTML = `<ul class="meal-food-list">${foodListHTML}</ul><div class="meal-totals">Estimated calories: ${Number(meal.totalCalories || 0).toFixed(0)} kcal | Protein: ${Number(meal.totalProtein || 0).toFixed(1)}g | Carbs: ${Number(meal.totalCarbs || 0).toFixed(1)}g | Fat: ${Number(meal.totalFat || 0).toFixed(1)}g | Estimated fiber: ${Number(meal.totalFiber || 0).toFixed(1)}g</div><div class="meal-card-actions"><button class="delete-log-btn" data-id="${meal._id || meal.id}">Remove</button></div>`;
         dailyLogContainer.appendChild(card);
     });
-
-    dailyTotals.innerHTML = `
-    <strong>Today's Totals:</strong>
-    Estimated calories: ${totalCalories.toFixed(0)} kcal |
-    Protein: ${totalProtein.toFixed(1)}g |
-    Carbs: ${totalCarbs.toFixed(1)}g |
-    Fat: ${totalFat.toFixed(1)}g |
-    Estimated fiber: ${totalFiber.toFixed(1)}g
-  `;
+    dailyTotals.innerHTML = `<strong>Today's Totals:</strong> Estimated calories: ${totalCalories.toFixed(0)} kcal | Protein: ${totalProtein.toFixed(1)}g | Carbs: ${totalCarbs.toFixed(1)}g | Fat: ${totalFat.toFixed(1)}g | Estimated fiber: ${totalFiber.toFixed(1)}g`;
 }
 
-function deleteLoggedMeal(id) {
-    const key = getTodayKey();
-    let todayLog = getTodayLog();
-    todayLog = todayLog.filter(function (meal) {
-        return meal.id !== id;
-    });
-    localStorage.setItem(key, JSON.stringify(todayLog));
+async function deleteLoggedMeal(id) {
+    if (selectedRole === "user" && localStorage.getItem(TOKEN_KEY)) {
+        await apiRequest(`/api/daily-logs/${encodeURIComponent(id)}`, { method: "DELETE" });
+        dailyLogCache = dailyLogCache.filter(meal => String(meal._id) !== String(id));
+    } else {
+        const todayLog = getTodayLog().filter(meal => String(meal.id) !== String(id));
+        localStorage.setItem(getTodayKey(), JSON.stringify(todayLog));
+        dailyLogCache = todayLog;
+    }
 }
 // Load food data from JSON file
 async function loadFoodData() {
@@ -1097,6 +1081,7 @@ function showApp(role, username) {
     updateProfileStats();
 
     switchTab(role === "admin" ? "admin" : "home");
+    if (role === "user") loadPersistedMealData();
 }
 
 function updateProfileStats() {
@@ -1330,7 +1315,7 @@ dietFilterButtons.forEach(function (button) {
     });
 });
 
-resultsContainer.addEventListener("click", function (event) {
+resultsContainer.addEventListener("click", async function (event) {
     const target = event.target;
     const card = target.closest(".meal-card");
     if (!card) {
@@ -1426,10 +1411,12 @@ resultsContainer.addEventListener("click", function (event) {
     }
 
     if (target.classList.contains("save-favorite-btn")) {
-        const wasSaved = saveFavorite(result.combination);
-        displayFavorites();
-        updateProfileStats();
-        alert(wasSaved ? "Meal saved to favorites!" : "This meal is already in your favorites.");
+        try {
+            const wasSaved = await saveFavorite(result.combination);
+            displayFavorites();
+            updateProfileStats();
+            alert(wasSaved ? "Meal saved to favorites!" : "This meal is already in your favorites.");
+        } catch (error) { alert(`Could not save favorite: ${error.message}`); }
     }
 
     if (target.classList.contains("log-meal-btn")) {
@@ -1437,10 +1424,15 @@ resultsContainer.addEventListener("click", function (event) {
             return;
         }
         target.disabled = true;
-        logMeal(result.combination);
-        displayDailyLog();
-        updateProfileStats();
-        target.textContent = "Logged";
+        try {
+            await logMeal(result.combination);
+            displayDailyLog();
+            updateProfileStats();
+            target.textContent = "Logged";
+        } catch (error) {
+            target.disabled = false;
+            alert(`Could not log meal: ${error.message}`);
+        }
     }
 });
 
@@ -1539,13 +1531,11 @@ resultsContainer.addEventListener("change", function (event) {
     saveMealPlan();
 });
 
-favoritesContainer.addEventListener("click", function (event) {
+favoritesContainer.addEventListener("click", async function (event) {
     if (event.target.classList.contains("delete-favorite-btn")) {
-        const id = Number(event.target.dataset.id);
-        deleteFavorite(id);
-        deleteLoggedMeal(id);
-        displayFavorites(); // re-render after deletion
-        updateProfileStats();
+        const id = event.target.dataset.id;
+        try { await deleteFavorite(id); displayFavorites(); updateProfileStats(); }
+        catch (error) { alert(`Could not remove favorite: ${error.message}`); }
     }
 });
 
@@ -1642,12 +1632,11 @@ macroForm.addEventListener("submit", function (event) {
     document.getElementById("results-section").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
-dailyLogContainer.addEventListener("click", function (event) {
+dailyLogContainer.addEventListener("click", async function (event) {
     if (event.target.classList.contains("delete-log-btn")) {
-        const id = Number(event.target.dataset.id);
-        deleteLoggedMeal(id);
-        displayDailyLog();
-        updateProfileStats();
+        const id = event.target.dataset.id;
+        try { await deleteLoggedMeal(id); displayDailyLog(); updateProfileStats(); }
+        catch (error) { alert(`Could not remove logged meal: ${error.message}`); }
     }
 });
 

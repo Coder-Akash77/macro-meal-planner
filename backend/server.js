@@ -11,6 +11,8 @@ const frontendPath = path.join(__dirname, '..');
 const authRoutes = require('./routes/authRoutes');
 
 const mealRoutes = require("./routes/mealRoutes");
+const favoriteRoutes = require("./routes/favoriteRoutes");
+const loggedMealRoutes = require("./routes/loggedMealRoutes");
 
 
 app.use(cors({ origin: process.env.FRONTEND_ORIGIN || `http://localhost:${PORT}` }));
@@ -24,6 +26,8 @@ app.get('/planner', (req, res) => {
 
 
 app.use("/api/meals", mealRoutes);
+app.use("/api/favorites", favoriteRoutes);
+app.use("/api/daily-logs", loggedMealRoutes);
 
 
 app.get('/api/health', (req, res) => {

@@ -10,7 +10,7 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
 ![JSON](https://img.shields.io/badge/Data-JSON-000000?style=flat-square&logo=json&logoColor=white)
-![No Backend](https://img.shields.io/badge/Backend-None%20(Client--Side)-lightgrey?style=flat-square)
+![Backend](https://img.shields.io/badge/Backend-Express%20%7C%20MongoDB-2F855A?style=flat-square)
 ![License](https://img.shields.io/badge/License-Student%20Project-informational?style=flat-square)
 
 [Overview](#-overview) • [Features](#-features) • [Screenshots](#-app-walkthrough) • [How It Works](#-how-the-matching-engine-works) • [Getting Started](#-getting-started) • [Project Structure](#-project-structure) • [Roadmap](#-roadmap)
@@ -40,10 +40,10 @@ That single design decision turned this from a basic calculator into a genuine *
 | ✏️ **Editable Meal Suggestions** | Add, remove, replace, and resize foods; see live nutrition and target matching, then save edits locally |
 | 🥦 **Food Database** | 190 foods, browsable and filterable by diet type and category |
 | ⭐ **Favorites** | Save meal combinations you like and reuse them instantly |
-| 📆 **Daily Log** | Track what you actually eat, stored locally per device |
+| 📆 **Daily Log** | Track meals by date; authenticated user logs persist in MongoDB Atlas |
 | 🔐 **Role-Based Access** | Separate User and Admin workspaces from a single login flow |
 | 🛠️ **Admin Mode** | Add custom foods to the database — instantly available to the planner |
-| 💾 **Zero Backend** | Runs entirely client-side using `localStorage`, no server or account database required |
+| 🔐 **Persistent backend** | Express APIs, JWT authentication, and MongoDB Atlas persistence for accounts, meals, favorites, and daily logs |
 
 ---
 
@@ -119,7 +119,7 @@ Rank by closeness → return best matches
 
 Rather than dumping every possible combination on the user, MacroMeal surfaces only the closest matches — turning a huge search space into a short, usable list.
 
-Suggested meals can be customized independently. Food quantities use grams, matching the database's per-100g nutrition values. Changes update the meal's score and target feedback immediately; the original suggestion remains available to restore. Calories are calculated from macros and fiber is marked as estimated because the current food database does not provide fiber values. Customized meal plans, meal-slot selections, favorites, and daily logs are stored in the browser's local storage.
+Suggested meals can be customized independently. Food quantities use grams, matching the database's per-100g nutrition values. Changes update the meal's score and target feedback immediately; the original suggestion remains available to restore. Calories are calculated from macros and fiber is marked as estimated because the current food database does not provide fiber values. Customized meal plans and meal-slot selections are stored in browser local storage. For signed-in users, favorites and daily logs are stored in MongoDB Atlas through authenticated APIs.
 
 ---
 
@@ -133,57 +133,92 @@ Suggested meals can be customized independently. Food quantities use grams, matc
 | Styling | CSS3, Google Fonts |
 | Logic | Vanilla JavaScript |
 | Data | JSON (`data/foods.json`) |
-| Persistence | Browser `localStorage` |
+| Frontend persistence | `localStorage` for UI preferences and admin-only demo data; MongoDB Atlas for authenticated account data |
+| Backend | Node.js, Express, Mongoose |
+| Authentication | bcryptjs + JWT |
+| External food search | USDA FoodData Central API (backend endpoint) |
 
 </div>
 
-There is **no backend server** in the current version — this is a deliberate scope decision to focus on the search/matching logic and UI, not infrastructure.
+The meal-planning algorithm and built-in food catalog run in the browser. Account data, saved meals, favorites, and daily logs use the Express backend and MongoDB Atlas when a user is signed in.
 
 ---
 
 ## 🚀 Getting Started
 
-Since the app loads its food database via `fetch()`, opening `index.html` directly **will not work** — it needs to be served locally.
+### Requirements
+- Node.js (LTS recommended) and npm
+- MongoDB Atlas database/connection URI
+- VS Code Live Server extension (or another static frontend server)
 
-### Option 1 — VS Code Live Server
+### 1. Configure the backend
+
+Open a terminal in `backend/` and install dependencies:
+
 ```bash
-1. Clone the repository
-2. Open the project folder in VS Code
-3. Install the "Live Server" extension
-4. Right-click index.html → "Open with Live Server"
+npm install
 ```
 
-### Option 2 — Python's built-in server
-```bash
-python -m http.server 8000
+Copy `.env.example` to `.env`, then fill in your own values. Never commit `.env`.
+
+```env
+PORT=5000
+FRONTEND_ORIGIN=http://127.0.0.1:5500
+USDA_API_KEY=your_usda_fooddata_central_api_key
+MONGODB_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_long_random_secret
 ```
-Then visit **http://localhost:8000**
+
+Start the API:
+
+```bash
+npm run dev
+```
+
+Check `http://localhost:5000/api/health` and `http://localhost:5000/api/db/status`.
+
+### 2. Start the frontend
+
+Open the project root in VS Code, right-click `index.html`, and choose **Open with Live Server**. The frontend API base is configured in `script.js` as `http://localhost:5000`.
+
+### 3. Test the core user flow
+
+1. Register with a new email and log in.
+2. Generate meal suggestions and save one to Favorites.
+3. Log a meal to Today's Log.
+4. Refresh the page and verify both still appear.
+5. In MongoDB Atlas, check the `favorites` and `loggedmeals` collections, as well as `users` and `meals`.
+6. Remove a favorite/logged meal and verify the corresponding document is deleted.
+7. Log out and verify protected API requests are rejected without a valid token.
 
 ### Demo Admin Login
-```
+
+```text
 Username: admin
 Password: admin123
 ```
-> This is a frontend-only demo login and is **not** real authentication.
+
+This remains a frontend demo/admin workspace. Real user registration and login use the backend. Do not use the demo admin credentials as a production security mechanism.
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 MacroMeal/
-│
 ├── index.html
-├── style.css
+├── app.html
 ├── script.js
-│
-├── data/
-│   └── foods.json          # Food nutrition database
-│
-├── assets/
-│   └── macromeal-logo.png
-│
-└── README.md
+├── style.css
+├── landing.css
+├── data/foods.json
+└── backend/
+    ├── server.js
+    ├── models/       # User, Meal, Favorite, LoggedMeal
+    ├── controllers/  # Auth, food search, meals, favorites, daily logs
+    ├── routes/
+    ├── middleware/   # JWT authentication
+    └── services/     # USDA API integration
 ```
 
 ---
@@ -192,31 +227,31 @@ MacroMeal/
 
 | Source | Purpose |
 |---|---|
-| `data/foods.json` | Core food nutrition dataset |
-| `localStorage` | Custom foods added by admin, deleted food IDs, favorite meals, daily logs |
+| `data/foods.json` | Built-in food nutrition catalog used by the meal planner |
+| `localStorage` | UI/session token, meal-plan draft, and local admin/demo preferences |
+| MongoDB `users` | Registered user accounts (passwords are hashed) |
+| MongoDB `meals` | User-owned saved meal documents |
+| MongoDB `favorites` | User-owned reusable favorite combinations |
+| MongoDB `loggedmeals` | User-owned meals logged by date |
 
-> ⚠️ Since data lives in the browser, it is **device-specific** and does not sync across devices.
+Favorites and daily logs are protected by JWT middleware and scoped to the authenticated user. The frontend requests the current day's logs from the backend; the historical records remain in MongoDB.
 
 ---
 
 ## 🧱 Current Limitations
 
-- No real user authentication
-- No backend or persistent database
-- User data is stored locally only
-- Admin credentials are hardcoded for demo purposes
-- Nutrition values are estimates
-- Meal combinations are limited to the current food dataset
-
-These are intentional scope boundaries for a frontend-focused build — not oversights — and are the natural next steps for a v2.
+- The meal suggestion algorithm uses the bundled `data/foods.json` dataset; the USDA search endpoint is separate and should be tested if external food search is required in the UI.
+- The demo admin login is client-side and is not suitable for production use.
+- Nutrition values and recommendations are estimates, not medical advice.
+- The project has not been security-audited for production deployment.
 
 ---
 
 ## 🗺️ Roadmap
 
-- [ ] Backend + proper database
-- [ ] Real user accounts and authentication
-- [ ] Cloud-synced meal history
+- [x] Express backend and MongoDB Atlas persistence
+- [x] Real user registration/login with JWT authentication
+- [x] Cloud-persisted favorites and daily meal logs
 - [ ] Improved recommendation algorithm
 - [ ] Richer nutrition data (micronutrients)
 - [ ] Weekly meal planning
