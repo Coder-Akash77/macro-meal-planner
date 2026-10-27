@@ -179,7 +179,7 @@ Check `http://localhost:5000/api/health` and `http://localhost:5000/api/db/statu
 
 ### 2. Start the frontend
 
-Open the project root in VS Code, right-click `index.html`, and choose **Open with Live Server**. The frontend API base is configured in `script.js` as `http://localhost:5000`.
+Open the project root in VS Code, right-click `index.html`, and choose **Open with Live Server**. The frontend API base is configured in `scripts/app-core.js` as `http://localhost:5000`.
 
 ### 3. Test the core user flow
 
@@ -208,7 +208,19 @@ This remains a frontend demo/admin workspace. Real user registration and login u
 MacroMeal/
 ├── index.html
 ├── app.html
-├── script.js
+├── scripts/
+│   ├── app-core.js
+│   ├── navigation.js
+│   ├── food-database.js
+│   ├── nutrition.js
+│   ├── meal-planner.js
+│   ├── meal-tracking.js
+│   ├── food-data.js
+│   ├── auth.js
+│   ├── admin.js
+│   ├── meal-planner-events.js
+│   ├── calorie-calculator.js
+│   └── app-init.js
 ├── style.css
 ├── landing.css
 ├── data/foods.json
