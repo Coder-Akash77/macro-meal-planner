@@ -54,7 +54,7 @@ That single design decision turned this from a basic calculator into a genuine *
 Users choose their workspace — **User** or **Admin** — before entering the planner. This keeps the day-to-day experience simple while still supporting admin tooling inside the same project.
 
 <p align="center">
-  <img src="assets/Screenshot 2026-08-25 163926.png" alt="Login screen" width="800"/>
+  <img src="frontend/assets/Screenshot 2026-08-25 163926.png" alt="Login screen" width="800"/>
 </p>
 
 ---
@@ -64,7 +64,7 @@ Users choose their workspace — **User** or **Admin** — before entering the p
 A quick snapshot of what the app offers — database size, match tolerance, and the core search approach — right on the homepage.
 
 <p align="center">
-  <img src="assets/Screenshot 2026-08-25 163938.png" alt="Landing page" width="800"/>
+  <img src="frontend/assets/Screenshot 2026-08-25 163938.png" alt="Landing page" width="800"/>
 </p>
 
 ---
@@ -74,7 +74,7 @@ A quick snapshot of what the app offers — database size, match tolerance, and 
 Body metrics and a goal go in; a daily calorie and macro starting point comes out — the foundation the meal planner builds on.
 
 <p align="center">
-  <img src="assets/Screenshot 2026-08-25 163948.png" alt="Calorie calculator" width="800"/>
+  <img src="frontend/assets/Screenshot 2026-08-25 163948.png" alt="Calorie calculator" width="800"/>
 </p>
 
 **Supported goals:** Fat loss · Muscle build · Maintenance · Weight gain
@@ -87,7 +87,7 @@ Body metrics and a goal go in; a daily calorie and macro starting point comes ou
 A clean, dashboard-style browser for all 190 foods — searchable, filterable by diet and category, with an at-a-glance nutrition snapshot.
 
 <p align="center">
-  <img src="assets/Screenshot 2026-08-25 163958.png" alt="Food database" width="800"/>
+  <img src="frontend/assets/Screenshot 2026-08-25 163958.png" alt="Food database" width="800"/>
 </p>
 
 ---
@@ -163,13 +163,13 @@ Copy `.env.example` to `.env`, then fill in your own values. Never commit `.env`
 
 ```env
 PORT=5000
-FRONTEND_ORIGIN=http://127.0.0.1:5500
+FRONTEND_ORIGIN=https://macro-meal-planner-1.onrender.com
 USDA_API_KEY=your_usda_fooddata_central_api_key
 MONGODB_URI=your_mongodb_atlas_connection_string
 JWT_SECRET=your_long_random_secret
 ```
 
-Start the API:
+Start the API locally:
 
 ```bash
 npm run dev
@@ -177,11 +177,29 @@ npm run dev
 
 Check `http://localhost:5000/api/health` and `http://localhost:5000/api/db/status`.
 
-### 2. Start the frontend
+### 2. Start the frontend locally
 
-Open the project root in VS Code, right-click `index.html`, and choose **Open with Live Server**. The frontend API base is configured in `scripts/app-core.js` as `http://localhost:5000`.
+Open `frontend/index.html` with VS Code Live Server. The frontend uses `http://localhost:5000` for local hosts and the backend URL configured in `frontend/scripts/config.js` otherwise.
 
-### 3. Test the core user flow
+### 3. Deploy separate Render services
+
+Create two services from this repository:
+
+**Backend Web Service**
+- Root Directory: `backend`
+- Build Command: `npm install`
+- Start Command: `npm start`
+- Health Check Path: `/api/health`
+- Environment variables: `FRONTEND_ORIGIN=https://macro-meal-planner-1.onrender.com`, `MONGODB_URI`, and `JWT_SECRET`. Add `USDA_API_KEY` if USDA search is used.
+
+**Frontend Static Site**
+- Root Directory: `frontend`
+- Build Command: leave blank
+- Publish Directory: `.`
+
+The frontend backend URL is set in `frontend/scripts/config.js` to `https://macro-meal-planner-2.onrender.com`. If Render assigns a different URL to the backend service, update that value and redeploy the Static Site. No secrets belong in frontend configuration.
+
+### 4. Test the core user flow
 
 1. Register with a new email and log in.
 2. Generate meal suggestions and save one to Favorites.
@@ -206,24 +224,14 @@ This remains a frontend demo/admin workspace. Real user registration and login u
 
 ```text
 MacroMeal/
-├── index.html
-├── app.html
-├── scripts/
-│   ├── app-core.js
-│   ├── navigation.js
-│   ├── food-database.js
-│   ├── nutrition.js
-│   ├── meal-planner.js
-│   ├── meal-tracking.js
-│   ├── food-data.js
-│   ├── auth.js
-│   ├── admin.js
-│   ├── meal-planner-events.js
-│   ├── calorie-calculator.js
-│   └── app-init.js
-├── style.css
-├── landing.css
-├── data/foods.json
+├── frontend/
+│   ├── index.html
+│   ├── app.html
+│   ├── scripts/
+│   ├── style.css
+│   ├── landing.css
+│   ├── data/foods.json
+│   └── assets/
 └── backend/
     ├── server.js
     ├── models/       # User, Meal, Favorite, LoggedMeal
