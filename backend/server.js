@@ -1,13 +1,12 @@
 require('dotenv').config();
-const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const foodRoutes = require('./routes/foodRoutes');
+const createCorsOptions = require('./middleware/corsOptions');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
-const frontendPath = path.join(__dirname, '..');
 const authRoutes = require('./routes/authRoutes');
 
 const mealRoutes = require("./routes/mealRoutes");
@@ -15,14 +14,8 @@ const favoriteRoutes = require("./routes/favoriteRoutes");
 const loggedMealRoutes = require("./routes/loggedMealRoutes");
 
 
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN || `http://localhost:${PORT}` }));
+app.use(cors(createCorsOptions()));
 app.use(express.json({ limit: '1mb' }));
-app.use(express.static(frontendPath));
-
-
-app.get('/planner', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'app.html'));
-});
 
 
 app.use("/api/meals", mealRoutes);
@@ -69,7 +62,7 @@ async function start() {
     console.warn('MONGODB_URI is missing. Database status will show not_configured.');
   }
 
-  app.listen(PORT, () => console.log(`MacroMeal is running at http://localhost:${PORT}`));
+  app.listen(PORT, '0.0.0.0', () => console.log(`MacroMeal API is listening on port ${PORT}`));
 }
 
 start();
