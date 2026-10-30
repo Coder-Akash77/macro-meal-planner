@@ -1,4 +1,4 @@
-const PRODUCTION_FRONTEND_ORIGIN = 'https://macro-meal-planner-1.onrender.com';
+const PRODUCTION_FRONTEND_ORIGIN = 'https://macro-meal-planner-3.onrender.com';
 const DEVELOPMENT_FRONTEND_ORIGINS = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',

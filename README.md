@@ -163,7 +163,7 @@ Copy `.env.example` to `.env`, then fill in your own values. Never commit `.env`
 
 ```env
 PORT=5000
-FRONTEND_ORIGIN=https://macro-meal-planner-1.onrender.com
+FRONTEND_ORIGIN=https://macro-meal-planner-3.onrender.com
 USDA_API_KEY=your_usda_fooddata_central_api_key
 MONGODB_URI=your_mongodb_atlas_connection_string
 JWT_SECRET=your_long_random_secret
@@ -190,12 +190,14 @@ Create two services from this repository:
 - Build Command: `npm install`
 - Start Command: `npm start`
 - Health Check Path: `/api/health`
-- Environment variables: `FRONTEND_ORIGIN=https://macro-meal-planner-1.onrender.com`, `MONGODB_URI`, and `JWT_SECRET`. Add `USDA_API_KEY` if USDA search is used.
+- Environment variables: `FRONTEND_ORIGIN=https://macro-meal-planner-3.onrender.com`, `MONGODB_URI`, and `JWT_SECRET`. Add `USDA_API_KEY` if USDA search is used.
 
 **Frontend Static Site**
 - Root Directory: `frontend`
 - Build Command: leave blank
 - Publish Directory: `.`
+
+The frontend Static Site URL is `https://macro-meal-planner-3.onrender.com`.
 
 The frontend backend URL is set in `frontend/scripts/config.js` to `https://macro-meal-planner-2.onrender.com`. If Render assigns a different URL to the backend service, update that value and redeploy the Static Site. No secrets belong in frontend configuration.
 

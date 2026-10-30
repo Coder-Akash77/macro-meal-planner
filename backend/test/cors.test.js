@@ -30,10 +30,10 @@ after(async () => {
 
 test('allows the production origin when the configured origin is local', async () => {
   const response = await fetch(`${baseUrl}/api/test`, {
-    headers: { Origin: 'https://macro-meal-planner-1.onrender.com' },
+    headers: { Origin: 'https://macro-meal-planner-3.onrender.com' },
   });
 
-  assert.equal(response.headers.get('access-control-allow-origin'), 'https://macro-meal-planner-1.onrender.com');
+  assert.equal(response.headers.get('access-control-allow-origin'), 'https://macro-meal-planner-3.onrender.com');
   assert.deepEqual(await response.json(), { status: 'ok' });
 });
 
@@ -56,14 +56,14 @@ test('answers authorization and JSON preflight requests', async () => {
   const response = await fetch(`${baseUrl}/api/test`, {
     method: 'OPTIONS',
     headers: {
-      Origin: 'https://macro-meal-planner-1.onrender.com',
+      Origin: 'https://macro-meal-planner-3.onrender.com',
       'Access-Control-Request-Method': 'POST',
       'Access-Control-Request-Headers': 'authorization,content-type',
     },
   });
 
   assert.equal(response.status, 204);
-  assert.equal(response.headers.get('access-control-allow-origin'), 'https://macro-meal-planner-1.onrender.com');
+  assert.equal(response.headers.get('access-control-allow-origin'), 'https://macro-meal-planner-3.onrender.com');
   assert.match(response.headers.get('access-control-allow-methods'), /\bPOST\b/);
   assert.deepEqual(
     response.headers.get('access-control-allow-headers').toLowerCase().split(',').map((header) => header.trim()).sort(),
