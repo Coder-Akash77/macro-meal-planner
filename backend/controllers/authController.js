@@ -1,4 +1,5 @@
 
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -31,6 +32,14 @@ function validEmail(email) {
 
 exports.register = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const message = "Database connection is unavailable. Please try again later.";
+      return res.status(503).json({
+        message,
+        error: message,
+      });
+    }
+
     const { name, email, password } = req.body || {};
 
     if (
@@ -111,6 +120,14 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const message = "Database connection is unavailable. Please try again later.";
+      return res.status(503).json({
+        message,
+        error: message,
+      });
+    }
+
     const { email, password } = req.body || {};
 
     if (!validEmail(email) || typeof password !== "string" || !password) {

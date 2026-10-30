@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 
 const authController = require('../controllers/authController');
 const User = require('../models/User');
@@ -9,6 +10,8 @@ const originalFindOne = User.findOne;
 
 test('register returns message text alongside error details for duplicate emails', async () => {
   process.env.JWT_SECRET = 'test-secret';
+  const originalReadyState = mongoose.connection.readyState;
+  Object.defineProperty(mongoose.connection, 'readyState', { value: 1, configurable: true, writable: true });
   User.findOne = async () => ({ email: 'existing@example.com' });
 
   const req = {
@@ -41,10 +44,13 @@ test('register returns message text alongside error details for duplicate emails
   assert.equal(responseBody.error, 'An account with this email already exists');
 
   User.findOne = originalFindOne;
+  Object.defineProperty(mongoose.connection, 'readyState', { value: originalReadyState, configurable: true, writable: true });
 });
 
 test('login returns message text alongside error details for invalid credentials', async () => {
   process.env.JWT_SECRET = 'test-secret';
+  const originalReadyState = mongoose.connection.readyState;
+  Object.defineProperty(mongoose.connection, 'readyState', { value: 1, configurable: true, writable: true });
   const hashedPassword = await bcrypt.hash('correct-password', 12);
   User.findOne = () => ({
     email: 'missing@example.com',
@@ -83,4 +89,5 @@ test('login returns message text alongside error details for invalid credentials
   assert.equal(responseBody.error, 'Invalid email or password');
 
   User.findOne = originalFindOne;
+  Object.defineProperty(mongoose.connection, 'readyState', { value: originalReadyState, configurable: true, writable: true });
 });
