@@ -7,6 +7,7 @@ const createCorsOptions = require('./middleware/corsOptions');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
+const FRONTEND_URL = 'https://macro-meal-planner-1.onrender.com';
 const authRoutes = require('./routes/authRoutes');
 
 const mealRoutes = require("./routes/mealRoutes");
@@ -17,6 +18,14 @@ const loggedMealRoutes = require("./routes/loggedMealRoutes");
 app.use(cors(createCorsOptions()));
 app.use(express.json({ limit: '1mb' }));
 
+app.get('/', (req, res) => {
+  res.json({
+    service: 'MacroMeal API',
+    status: 'ok',
+    frontend: FRONTEND_URL,
+    health: '/api/health',
+  });
+});
 
 app.use("/api/meals", mealRoutes);
 app.use("/api/favorites", favoriteRoutes);

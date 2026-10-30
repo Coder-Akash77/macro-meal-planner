@@ -199,6 +199,8 @@ Create two services from this repository:
 
 The frontend backend URL is set in `frontend/scripts/config.js` to `https://macro-meal-planner-2.onrender.com`. If Render assigns a different URL to the backend service, update that value and redeploy the Static Site. No secrets belong in frontend configuration.
 
+The backend service is API-only: its root URL returns service information, and `/api/health` is the health check. Open the Render Static Site URL to use the website; do not expect the backend URL to serve the frontend.
+
 ### 4. Test the core user flow
 
 1. Register with a new email and log in.
