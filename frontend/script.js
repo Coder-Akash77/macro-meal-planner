@@ -1146,7 +1146,7 @@ signupForm.addEventListener("submit", async function (event) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || "Registration failed.");
+            throw new Error(data.error || data.message || "Registration failed.");
         }
 
         signupForm.reset();
@@ -1198,7 +1198,7 @@ loginForm.addEventListener("submit", async function (event) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || "Invalid email or password.");
+            throw new Error(data.error || data.message || "Invalid email or password.");
         }
 
         if (!data.token) {

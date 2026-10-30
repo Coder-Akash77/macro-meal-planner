@@ -38,26 +38,34 @@ exports.register = async (req, res, next) => {
       name.trim().length < 2 ||
       name.trim().length > 80
     ) {
+      const message = "Name must be between 2 and 80 characters";
       return res.status(400).json({
-        error: "Name must be between 2 and 80 characters",
+        message,
+        error: message,
       });
     }
 
     if (!validEmail(email)) {
+      const message = "Please provide a valid email address";
       return res.status(400).json({
-        error: "Please provide a valid email address",
+        message,
+        error: message,
       });
     }
 
     if (typeof password !== "string" || password.length < 8 || password.length > 72) {
+      const message = "Password must be between 8 and 72 characters";
       return res.status(400).json({
-        error: "Password must be between 8 and 72 characters",
+        message,
+        error: message,
       });
     }
 
     if (!process.env.JWT_SECRET) {
+      const message = "Authentication is not configured on the server";
       return res.status(500).json({
-        error: "Authentication is not configured on the server",
+        message,
+        error: message,
       });
     }
 
@@ -66,8 +74,10 @@ exports.register = async (req, res, next) => {
     const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
+      const message = "An account with this email already exists";
       return res.status(409).json({
-        error: "An account with this email already exists",
+        message,
+        error: message,
       });
     }
 
@@ -88,8 +98,10 @@ exports.register = async (req, res, next) => {
     });
   } catch (error) {
     if (error.code === 11000) {
+      const message = "An account with this email already exists";
       return res.status(409).json({
-        error: "An account with this email already exists",
+        message,
+        error: message,
       });
     }
 
@@ -102,14 +114,18 @@ exports.login = async (req, res, next) => {
     const { email, password } = req.body || {};
 
     if (!validEmail(email) || typeof password !== "string" || !password) {
+      const message = "Valid email and password are required";
       return res.status(400).json({
-        error: "Valid email and password are required",
+        message,
+        error: message,
       });
     }
 
     if (!process.env.JWT_SECRET) {
+      const message = "Authentication is not configured on the server";
       return res.status(500).json({
-        error: "Authentication is not configured on the server",
+        message,
+        error: message,
       });
     }
 
@@ -118,8 +134,10 @@ exports.login = async (req, res, next) => {
     }).select("+password");
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
+      const message = "Invalid email or password";
       return res.status(401).json({
-        error: "Invalid email or password",
+        message,
+        error: message,
       });
     }
 
