@@ -28,7 +28,7 @@ const adminNavTab = document.querySelector('.nav-tab[data-tab="admin"]');
 
 const LOGIN_KEY = "macro-meal-login";
 const TOKEN_KEY = "macro-meal-token";
-const API_BASE = "http://localhost:5000";
+const API_BASE = window.MACRO_MEAL_API_BASE;
 let favoritesCache = [];
 let dailyLogCache = [];
 
@@ -92,5 +92,4 @@ let selectedCategoryFilter = "all";
 const CALORIE_TOLERANCE_PERCENT = 5;
 const MACRO_TOLERANCE_PERCENT = 10;
 const CUSTOM_MEAL_PLAN_KEY = "macro-meal-custom-plan";
-
 
